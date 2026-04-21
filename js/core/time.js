@@ -1,0 +1,15 @@
+export function toUtcDate(input) {
+  const [year, month, day] = input.date.split('-').map(Number);
+  const [hour, minute, second = 0] = input.time.split(':').map(Number);
+
+  const utcMillis = Date.UTC(year, month - 1, day, hour - input.utcOffset, minute, second);
+  return new Date(utcMillis);
+}
+
+export function julianDayFromDate(date) {
+  return (date.getTime() / 86400000) + 2440587.5;
+}
+
+export function julianCenturiesSinceJ2000(jd) {
+  return (jd - 2451545.0) / 36525;
+}

@@ -1,0 +1,86 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f7f7fb;
+  --fg: #222;
+  --panel: #ffffff;
+  --border: #d9d9e3;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.app-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.layout {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+button {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+}
+
+#app-status {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+canvas {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+#transits p {
+  margin: 0.35rem 0;
+}
+
+#synthesis h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+#synthesis p {
+  margin: 0.35rem 0;
+}

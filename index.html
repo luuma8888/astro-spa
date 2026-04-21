@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astro App</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <h1>Astro App</h1>
+      <p>Astronomie réelle, astrologie, Soleil, Lune, Y-King</p>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <h2>Carte de référence</h2>
+        <form id="chart-form">
+          <label>Date <input type="date" name="date" required /></label>
+          <label>Heure <input type="time" name="time" step="1" required /></label>
+          <label>Latitude <input type="number" name="latitude" step="0.000001" required /></label>
+          <label>Longitude <input type="number" name="longitude" step="0.000001" required /></label>
+          <label>UTC offset <input type="number" name="utcOffset" step="0.5" value="0" required /></label>
+          <label>
+            Système de maisons
+            <select name="houseSystem">
+              <option value="porphyry" selected>Porphyry</option>
+              <option value="equal">Maisons égales</option>
+              <option value="whole-sign">Whole Sign</option>
+            </select>
+          </label>
+          <label>
+            Ayanamsa
+            <select name="ayanamsa">
+              <option value="lahiri" selected>Lahiri</option>
+              <option value="faganBradley">Fagan-Bradley</option>
+              <option value="krishnamurti">Krishnamurti</option>
+            </select>
+          </label>
+          <div class="button-row">
+            <button type="submit">Calculer</button>
+            <button type="button" id="save-chart">Sauvegarder</button>
+            <button type="button" id="load-chart">Charger</button>
+            <button type="button" id="export-chart">Exporter JSON</button>
+            <button type="button" id="import-chart-button">Importer JSON</button>
+            <input type="file" id="import-chart-file" accept="application/json" hidden />
+          </div>
+        </form>
+        <p id="app-status">Initialisation...</p>
+      </section>
+
+      <section class="panel">
+        <h2>Résumé</h2>
+        <div id="summary"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Corps célestes</h2>
+        <div id="bodies"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Maisons</h2>
+        <div id="houses"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Symbolique</h2>
+        <div id="symbolic"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Synthèse automatique</h2>
+        <div id="synthesis"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Aspects</h2>
+        <div id="aspects"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Phase lunaire</h2>
+        <div id="moon-phase"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Lever / Coucher</h2>
+        <div id="rise-set"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Carte du ciel</h2>
+        <canvas id="chart-wheel" width="520" height="520"></canvas>
+      </section>
+
+      <section class="panel">
+        <h2>Transits / Comparaison</h2>
+        <form id="transit-form">
+          <label>Date transit <input type="date" name="date" required /></label>
+          <label>Heure transit <input type="time" name="time" step="1" required /></label>
+          <label>Latitude <input type="number" name="latitude" step="0.000001" required /></label>
+          <label>Longitude <input type="number" name="longitude" step="0.000001" required /></label>
+          <label>UTC offset <input type="number" name="utcOffset" step="0.5" value="0" required /></label>
+          <label>
+            Orbe max
+            <select name="maxOrb">
+              <option value="2">2°</option>
+              <option value="3">3°</option>
+              <option value="4" selected>4°</option>
+              <option value="5">5°</option>
+              <option value="6">6°</option>
+            </select>
+          </label>
+          <label><input type="checkbox" name="includeFast" checked /> Inclure les transits rapides</label>
+          <label><input type="checkbox" name="includeAngles" checked /> Inclure Asc / MC</label>
+          <label><input type="checkbox" name="includeMinorImportance" /> Inclure aussi les transits légers</label>
+          <button type="submit">Comparer</button>
+        </form>
+        <div id="transits"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./js/main.js?v=2026-04-21-02"></script>
+</body>
+</html>
