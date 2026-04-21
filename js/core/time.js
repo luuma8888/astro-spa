@@ -1,8 +1,10 @@
 export function toUtcDate(input) {
   const [year, month, day] = input.date.split('-').map(Number);
   const [hour, minute, second = 0] = input.time.split(':').map(Number);
+  const utcOffsetMinutes = Math.round(Number(input.utcOffset) * 60);
+  const localMillis = Date.UTC(year, month - 1, day, hour, minute, second);
 
-  const utcMillis = Date.UTC(year, month - 1, day, hour - input.utcOffset, minute, second);
+  const utcMillis = localMillis - utcOffsetMinutes * 60000;
   return new Date(utcMillis);
 }
 

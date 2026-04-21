@@ -1,0 +1,8 @@
+{
+  "name": "astro-spa",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate:precision": "node ./tools/validate-precision.mjs"
+  }
+}
