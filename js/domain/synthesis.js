@@ -1,3 +1,5 @@
+const SIGN_NAMES = ['Bélier', 'Taureau', 'Gémeaux', 'Cancer', 'Lion', 'Vierge', 'Balance', 'Scorpion', 'Sagittaire', 'Capricorne', 'Verseau', 'Poissons'];
+
 function formatPlacement(label, body) {
   const sign = body?.tropical?.name ?? 'inconnu';
   const house = body?.house ?? '?';
@@ -58,6 +60,19 @@ function planetFunction(name) {
   };
 
   return map[name] ?? 'une fonction non précisée';
+}
+
+function normalizeAngle(angle) {
+  const normalized = angle % 360;
+  return normalized < 0 ? normalized + 360 : normalized;
+}
+
+function getAscSignName(chart) {
+  const asc = chart?.angles?.asc;
+  if (!Number.isFinite(asc)) return 'inconnu';
+
+  const signIndex = Math.floor(normalizeAngle(asc) / 30);
+  return SIGN_NAMES[signIndex] ?? 'inconnu';
 }
 
 function aspectWeight(item) {
@@ -121,11 +136,7 @@ function buildMoonMeaning(body) {
 }
 
 function buildAscMeaning(chart) {
-  const asc = chart?.angles?.asc;
-  const signIndex = Math.floor(((asc ?? 0) % 360) / 30);
-  const signNames = ['Bélier', 'Taureau', 'Gémeaux', 'Cancer', 'Lion', 'Vierge', 'Balance', 'Scorpion', 'Sagittaire', 'Capricorne', 'Verseau', 'Poissons'];
-  const sign = signNames[signIndex] ?? 'inconnu';
-
+  const sign = getAscSignName(chart);
   return `L’Ascendant colore la manière d’entrer en relation avec le monde par une tonalité de ${signTone(sign)}.`;
 }
 
@@ -133,6 +144,12 @@ function buildPlanetMeaning(name, body) {
   const sign = body?.tropical?.name ?? 'inconnu';
   const house = body?.house ?? '?';
   return `${name} montre comment ${planetFunction(name)} se déploie à travers ${signTone(sign)}, dans le champ ${houseTone(house)}.`;
+}
+
+function rankAspects(chart) {
+  return [...(chart.aspects ?? [])]
+    .map((item) => ({ ...item, weight: aspectWeight(item) }))
+    .sort((a, b) => b.weight - a.weight);
 }
 
 function summarizeCoreTripod(chart) {
@@ -168,10 +185,7 @@ function summarizeMajorBodies(chart) {
 }
 
 function summarizeAspects(chart) {
-  const ranked = [...(chart.aspects ?? [])]
-    .map((item) => ({ ...item, weight: aspectWeight(item) }))
-    .sort((a, b) => b.weight - a.weight)
-    .slice(0, 6);
+  const ranked = rankAspects(chart).slice(0, 6);
 
   if (!ranked.length) {
     return ['Aucun aspect majeur suffisamment net n’a été détecté dans les critères actuels.'];
@@ -215,13 +229,85 @@ function summarizeRiseSet(chart) {
   return lines;
 }
 
+function buildShortOverview(chart, dominants, rankedAspects) {
+  const sunSign = chart.bodies?.sun?.tropical?.name ?? 'inconnu';
+  const moonSign = chart.bodies?.moon?.tropical?.name ?? 'inconnu';
+  const ascSign = getAscSignName(chart);
+  const topSign = dominants.topSigns[0]?.[0];
+  const topHouse = dominants.topHouses[0]?.[0];
+  const mainAspect = rankedAspects[0];
+  const lines = [];
+
+  lines.push(`Axe central : Soleil en ${sunSign}, Lune en ${moonSign}, Ascendant ${ascSign}.`);
+
+  if (topSign || topHouse) {
+    const fragments = [];
+
+    if (topSign) fragments.push(`une dominante ${topSign}`);
+    if (topHouse != null) fragments.push(`un accent sur la maison ${topHouse}`);
+
+    lines.push(`Le thème met surtout en avant ${fragments.join(' et ')}.`);
+  }
+
+  if (mainAspect) {
+    lines.push(`Le point de tension ou de cohérence principal semble passer par ${mainAspect.bodyA} ${mainAspect.aspect} ${mainAspect.bodyB} (orbe ${mainAspect.orb.toFixed(2)}°).`);
+  }
+
+  return lines;
+}
+
+function buildMediumOverview(chart, dominants, rankedAspects) {
+  const lines = [...buildShortOverview(chart, dominants, rankedAspects)];
+  const sunHouse = chart.bodies?.sun?.house ?? '?';
+  const moonHouse = chart.bodies?.moon?.house ?? '?';
+  const topAspect = rankedAspects.slice(0, 2);
+
+  lines.push(`Le Soleil agit surtout dans ${houseTone(sunHouse)}, tandis que la Lune ramène l’expérience vers ${houseTone(moonHouse)}.`);
+
+  if (topAspect.length) {
+    lines.push(`Les aspects les plus parlants sont ${topAspect.map((item) => `${item.bodyA} ${item.aspect} ${item.bodyB}`).join(' et ')}.`);
+  }
+
+  return lines;
+}
+
+function buildLongOverview(chart, dominants, rankedAspects) {
+  const lines = [...buildMediumOverview(chart, dominants, rankedAspects)];
+  const moonPhase = chart.moonPhase?.label;
+  const riseSet = chart.riseSet?.sun;
+
+  if (moonPhase) {
+    lines.push(`La phase lunaire actuelle est ${moonPhase.toLowerCase()}, ce qui nuance le rythme global du thème.`);
+  }
+
+  if (riseSet?.rise && riseSet?.set) {
+    lines.push(`Le contexte local garde aussi un ancrage concret avec un lever du Soleil à ${riseSet.rise} UTC et un coucher à ${riseSet.set} UTC.`);
+  }
+
+  if (dominants.topSigns.length > 1) {
+    lines.push(`En arrière-plan, ${dominants.topSigns.slice(0, 2).map(([name]) => name).join(' puis ')} structurent la coloration générale.`);
+  }
+
+  return lines;
+}
+
 export function buildChartSynthesis(chart) {
+  const dominants = countDominants(chart);
+  const rankedAspects = rankAspects(chart);
+
   return {
-    core: summarizeCoreTripod(chart),
-    dominants: summarizeDominants(chart),
-    bodies: summarizeMajorBodies(chart),
-    aspects: summarizeAspects(chart),
-    moonPhase: summarizeMoonPhase(chart),
-    riseSet: summarizeRiseSet(chart)
+    overview: {
+      short: buildShortOverview(chart, dominants, rankedAspects),
+      medium: buildMediumOverview(chart, dominants, rankedAspects),
+      long: buildLongOverview(chart, dominants, rankedAspects)
+    },
+    sections: {
+      core: summarizeCoreTripod(chart),
+      dominants: summarizeDominants(chart),
+      bodies: summarizeMajorBodies(chart),
+      aspects: summarizeAspects(chart),
+      moonPhase: summarizeMoonPhase(chart),
+      riseSet: summarizeRiseSet(chart)
+    }
   };
 }

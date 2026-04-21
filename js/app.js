@@ -5,6 +5,8 @@ import { loadChart, saveChart } from './storage/localDb.js';
 import { exportJson, importJsonFile } from './storage/exportImport.js';
 import { loadSettings, saveSettings } from './storage/settings.js';
 import { renderSummary } from './ui/renderSummary.js';
+import { renderClarifications } from './ui/renderClarifications.js';
+import { renderCalculationGroups } from './ui/renderCalculationGroups.js';
 import { renderBodies } from './ui/renderBodies.js';
 import { renderHouses } from './ui/renderHouses.js';
 import { renderSymbolic } from './ui/renderSymbolic.js';
@@ -38,6 +40,10 @@ function getMainFormInput(form) {
   };
 }
 
+function normalizeSynthesisLevel(value) {
+  return ['short', 'medium', 'long'].includes(value) ? value : 'medium';
+}
+
 function getTransitFormInput(form) {
   const formData = new FormData(form);
 
@@ -64,6 +70,27 @@ function setProjectOptions(form, options) {
   if (!form || !options) return;
   if (form.elements.houseSystem) form.elements.houseSystem.value = options.houseSystem ?? 'porphyry';
   if (form.elements.ayanamsa) form.elements.ayanamsa.value = options.ayanamsa ?? 'lahiri';
+}
+
+function setSynthesisLevelControl(select, value) {
+  if (!select) return;
+  select.value = normalizeSynthesisLevel(value);
+}
+
+function chartNeedsRebuild(chart) {
+  if (!chart?.context) return false;
+  if (!chart?.synthesis) return true;
+  if (!chart.synthesis.overview || !chart.synthesis.sections) return true;
+  return false;
+}
+
+function normalizeChartForUi(chart, inputFallback = null, optionsFallback = null) {
+  if (!chartNeedsRebuild(chart)) return chart;
+
+  const input = chart?.input ?? inputFallback;
+  if (!input) return chart;
+
+  return buildChart(input, chart?.options ?? optionsFallback ?? {});
 }
 
 function setStatus(message) {
@@ -154,6 +181,8 @@ function bindDraftPersistence(form, key, persistFn) {
 
 function renderChart(chart) {
   renderSummary(chart);
+  renderClarifications(chart);
+  renderCalculationGroups(chart);
   renderBodies(chart);
   renderHouses(chart);
   renderSymbolic(chart);
@@ -161,24 +190,35 @@ function renderChart(chart) {
   renderMoonPhase(chart);
   renderRiseSet(chart);
   renderChartWheel(chart);
-  renderSynthesis(chart);
+  renderSynthesis(chart, uiState.synthesisLevel);
+}
+
+function rerenderCurrentViews() {
+  if (uiState.currentChart) {
+    renderChart(uiState.currentChart);
+  }
+
+  renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
 }
 
 export function initApp() {
   const form = document.getElementById('chart-form');
   const transitForm = document.getElementById('transit-form');
+  const synthesisLevelSelect = document.getElementById('synthesis-level');
   const saveButton = document.getElementById('save-chart');
   const loadButton = document.getElementById('load-chart');
   const exportButton = document.getElementById('export-chart');
   const importButton = document.getElementById('import-chart-button');
   const importFile = document.getElementById('import-chart-file');
   const canUseStorage = storageAvailable();
-  const settings = canUseStorage ? loadSettings() : { houseSystem: 'porphyry', ayanamsa: 'lahiri' };
+  const settings = canUseStorage ? loadSettings() : { houseSystem: 'porphyry', ayanamsa: 'lahiri', synthesisLevel: 'medium' };
   const storedChart = canUseStorage ? loadChart() : null;
   const mainDraft = canUseStorage ? loadFormDraft(MAIN_FORM_DRAFT_KEY) : null;
   const transitDraft = canUseStorage ? loadFormDraft(TRANSIT_FORM_DRAFT_KEY) : null;
 
+  uiState.synthesisLevel = normalizeSynthesisLevel(settings.synthesisLevel);
   setProjectOptions(form, settings);
+  setSynthesisLevelControl(synthesisLevelSelect, uiState.synthesisLevel);
 
   if (!canUseStorage) {
     setStatus('Stockage local indisponible dans ce contexte navigateur.');
@@ -187,6 +227,8 @@ export function initApp() {
     bindDraftPersistence(transitForm, TRANSIT_FORM_DRAFT_KEY, persistTransitFormDraft);
     setStatus('Stockage local actif.');
   }
+
+  renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
 
   if (mainDraft?.input) {
     populateForm(form, mainDraft.input);
@@ -200,7 +242,11 @@ export function initApp() {
   }
 
   if (storedChart?.chart) {
-    uiState.currentChart = storedChart.chart;
+    uiState.currentChart = normalizeChartForUi(
+      storedChart.chart,
+      storedChart.natalInput ?? storedChart.chart.input ?? null,
+      storedChart.natalOptions ?? storedChart.chart.options ?? settings
+    );
     uiState.currentInput = storedChart.natalInput ?? storedChart.chart.input ?? null;
     if (!mainDraft?.input && uiState.currentInput) {
       populateForm(form, uiState.currentInput);
@@ -209,9 +255,14 @@ export function initApp() {
       setProjectOptions(form, storedChart.natalOptions ?? storedChart.chart.options ?? settings);
     }
     renderChart(storedChart.chart);
+    renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
     setStatus('Carte restaurée depuis le stockage local.');
   } else if (storedChart?.input) {
-    uiState.currentChart = storedChart;
+    uiState.currentChart = normalizeChartForUi(
+      storedChart,
+      storedChart.input,
+      storedChart.options ?? settings
+    );
     uiState.currentInput = storedChart.input;
     if (!mainDraft?.input) {
       populateForm(form, storedChart.input);
@@ -220,8 +271,23 @@ export function initApp() {
       setProjectOptions(form, storedChart.options ?? settings);
     }
     renderChart(storedChart);
+    renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
     setStatus('Carte restaurée depuis l’ancien format local.');
   }
+
+  synthesisLevelSelect?.addEventListener('change', () => {
+    uiState.synthesisLevel = normalizeSynthesisLevel(synthesisLevelSelect.value);
+
+    if (canUseStorage) {
+      saveSettings({
+        ...(uiState.currentChart?.options ?? settings),
+        synthesisLevel: uiState.synthesisLevel
+      });
+    }
+
+    rerenderCurrentViews();
+    setStatus(`Niveau de lecture réglé sur ${uiState.synthesisLevel}.`);
+  });
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -237,8 +303,12 @@ export function initApp() {
     const chart = buildChart(input, options);
     uiState.currentChart = chart;
     uiState.currentInput = input;
+    uiState.currentTransitResult = null;
     if (canUseStorage) {
-      saveSettings(options);
+      saveSettings({
+        ...options,
+        synthesisLevel: uiState.synthesisLevel
+      });
       saveChart({
         chart,
         natalInput: input,
@@ -248,6 +318,7 @@ export function initApp() {
     }
 
     renderChart(chart);
+    renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
     setStatus(canUseStorage ? 'Carte calculée et enregistrée localement.' : 'Carte calculée.');
   });
 
@@ -282,16 +353,23 @@ export function initApp() {
       return;
     }
 
-    const chart = saved.chart ?? saved;
+    const chart = normalizeChartForUi(
+      saved.chart ?? saved,
+      saved.natalInput ?? saved.chart?.input ?? saved.input ?? null,
+      saved.natalOptions ?? saved.chart?.options ?? saved.options ?? settings
+    );
     const input = saved.natalInput ?? chart.input ?? null;
     const options = saved.natalOptions ?? chart.options ?? settings;
 
     uiState.currentChart = chart;
     uiState.currentInput = input;
+    uiState.currentTransitResult = null;
     if (input) populateForm(form, input);
     setProjectOptions(form, options);
     persistMainFormDraft(form);
+    setSynthesisLevelControl(synthesisLevelSelect, uiState.synthesisLevel);
     renderChart(chart);
+    renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
     setStatus('Carte chargée depuis le stockage local.');
   });
 
@@ -319,7 +397,11 @@ export function initApp() {
 
     try {
       const imported = await importJsonFile(file);
-      const chart = imported?.chart ?? imported;
+      const chart = normalizeChartForUi(
+        imported?.chart ?? imported,
+        imported?.natalInput ?? imported?.chart?.input ?? imported?.input ?? null,
+        imported?.natalOptions ?? imported?.chart?.options ?? imported?.options ?? settings
+      );
 
       if (!chart?.context) {
         throw new Error('Fichier invalide');
@@ -327,6 +409,7 @@ export function initApp() {
 
       uiState.currentChart = chart;
       uiState.currentInput = imported?.natalInput ?? chart.input ?? null;
+      uiState.currentTransitResult = null;
 
       if (uiState.currentInput) {
         populateForm(form, uiState.currentInput);
@@ -337,6 +420,7 @@ export function initApp() {
         persistMainFormDraft(form);
       }
       renderChart(chart);
+      renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
       setStatus('Carte importée avec succès.');
     } catch (error) {
       alert('Import impossible : ' + error.message);
@@ -376,10 +460,11 @@ export function initApp() {
       transitOptions,
       uiState.currentChart?.options ?? settings
     );
+    uiState.currentTransitResult = result;
     if (canUseStorage) {
       persistTransitFormDraft(transitForm);
     }
-    renderTransits(result);
+    renderTransits(result, uiState.synthesisLevel);
     setStatus('Comparaison de transits calculée.');
   });
 

@@ -58,7 +58,10 @@ function isInterestingTransit(aspect, options) {
   return true;
 }
 
-function buildTransitSynthesis(aspects) {
+function summarizeTransitClimate(aspects) {
+  const strongCount = aspects.filter((item) => item.importance === 'très fort' || item.importance === 'fort').length;
+  const slowCount = aspects.filter((item) => item.transitSpeedClass === 'slow').length;
+
   if (!aspects.length) {
     return [
       'Aucun transit significatif ne ressort avec les filtres actuels.',
@@ -66,17 +69,52 @@ function buildTransitSynthesis(aspects) {
     ];
   }
 
-  const top = aspects.slice(0, 5);
-  const slowCount = aspects.filter((item) => item.transitSpeedClass === 'slow').length;
-  const strongCount = aspects.filter((item) => item.importance === 'très fort' || item.importance === 'fort').length;
-  const lines = [];
-
-  lines.push(`Le climat de transit actuel met en avant ${strongCount} aspect(s) fort(s) ou très fort(s).`);
+  const lines = [`Le climat de transit actuel met en avant ${strongCount} aspect(s) fort(s) ou très fort(s).`];
 
   if (slowCount > 0) {
-    lines.push('Des planètes lentes participent au climat général, ce qui suggère des mouvements moins ponctuels et plus structurants.');
+    lines.push('Des planètes lentes participent au climat général, ce qui suggère des mouvements plus structurants que ponctuels.');
   } else {
     lines.push('Le climat semble surtout porté par des mouvements rapides ou intermédiaires.');
+  }
+
+  return lines;
+}
+
+function buildTransitBridge(natalChart, aspects) {
+  const natalShort = natalChart?.synthesis?.overview?.short ?? [];
+  const topAspect = aspects[0];
+  const lines = [];
+
+  if (natalShort[0]) {
+    lines.push(`Point d’appui natal : ${natalShort[0]}`);
+  }
+
+  if (natalShort[1]) {
+    lines.push(`Fond de thème : ${natalShort[1]}`);
+  }
+
+  if (topAspect) {
+    lines.push(`Transit dominant : ${topAspect.bodyA} ${topAspect.aspect} ${topAspect.bodyB} (orbe ${topAspect.orb.toFixed(2)}°).`);
+  }
+
+  return lines;
+}
+
+function buildTransitOverview(natalChart, aspects, level) {
+  const climate = summarizeTransitClimate(aspects);
+  const bridge = buildTransitBridge(natalChart, aspects);
+  const top = aspects.slice(0, level === 'short' ? 2 : level === 'medium' ? 3 : 5);
+  const lines = [...climate, ...bridge];
+
+  if (!aspects.length) {
+    return lines;
+  }
+
+  if (level === 'short') {
+    if (top[0]) {
+      lines.push(`Transit clé : ${top[0].bodyA} ${top[0].aspect} ${top[0].bodyB}.`);
+    }
+    return lines;
   }
 
   lines.push(...top.map((item) =>
@@ -134,6 +172,10 @@ export function buildTransitComparison(natalInput, transitInput, options = {}, n
     transitChart,
     aspects,
     summary,
-    synthesis: buildTransitSynthesis(aspects)
+    synthesis: {
+      short: buildTransitOverview(natalChart, aspects, 'short'),
+      medium: buildTransitOverview(natalChart, aspects, 'medium'),
+      long: buildTransitOverview(natalChart, aspects, 'long')
+    }
   };
 }

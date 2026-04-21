@@ -1,6 +1,7 @@
-import { normalizeDeg } from '../core/angles.js';
+import { normalizeDeg, degToRad, radToDeg } from '../core/angles.js';
 
 const SYNODIC_MONTH = 29.530588853;
+const KM_PER_AU = 149597870.7;
 
 export function moonPhaseAngle(sunLonDeg, moonLonDeg) {
   return normalizeDeg(moonLonDeg - sunLonDeg);
@@ -13,6 +14,22 @@ export function moonIlluminationFraction(sunLonDeg, moonLonDeg) {
 
 export function moonAgeDays(sunLonDeg, moonLonDeg) {
   return (moonPhaseAngle(sunLonDeg, moonLonDeg) / 360) * SYNODIC_MONTH;
+}
+
+export function moonIlluminationFractionPrecise(sunBody, moonBody) {
+  const phaseAngle = moonPhaseAngle(sunBody.longitudeDeg, moonBody.longitudeDeg);
+  const phaseAngleRad = degToRad(phaseAngle);
+  const sunDistanceKm = (sunBody.distanceAu ?? 1) * KM_PER_AU;
+  const moonDistanceKm = moonBody.distanceKm ?? 384400;
+  const i = Math.atan2(
+    sunDistanceKm * Math.sin(phaseAngleRad),
+    moonDistanceKm - sunDistanceKm * Math.cos(phaseAngleRad)
+  );
+
+  return {
+    illuminationFraction: (1 + Math.cos(i)) / 2,
+    brightLimbPhaseAngleDeg: normalizeDeg(radToDeg(i))
+  };
 }
 
 export function getMoonPhaseLabel(sunLonDeg, moonLonDeg) {
@@ -45,6 +62,24 @@ export function buildMoonPhaseData(sunLonDeg, moonLonDeg) {
     illuminationPercent: illumination * 100,
     ageDays,
     label: getMoonPhaseLabel(sunLonDeg, moonLonDeg),
+    waxing,
+    waning: !waxing
+  };
+}
+
+export function buildMoonPhaseDataFromBodies(sunBody, moonBody) {
+  const angle = moonPhaseAngle(sunBody.longitudeDeg, moonBody.longitudeDeg);
+  const precise = moonIlluminationFractionPrecise(sunBody, moonBody);
+  const ageDays = moonAgeDays(sunBody.longitudeDeg, moonBody.longitudeDeg);
+  const waxing = isWaxingMoon(sunBody.longitudeDeg, moonBody.longitudeDeg);
+
+  return {
+    angleDeg: angle,
+    illuminationFraction: precise.illuminationFraction,
+    illuminationPercent: precise.illuminationFraction * 100,
+    brightLimbPhaseAngleDeg: precise.brightLimbPhaseAngleDeg,
+    ageDays,
+    label: getMoonPhaseLabel(sunBody.longitudeDeg, moonBody.longitudeDeg),
     waxing,
     waning: !waxing
   };

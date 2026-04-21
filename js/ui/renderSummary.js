@@ -3,6 +3,7 @@ import { formatDeg } from './formatters.js';
 export function renderSummary(chart) {
   const el = document.getElementById('summary');
   el.innerHTML = `
+    <p><strong>Repère :</strong> ce bloc rassemble les valeurs techniques utilisées pour produire les positions et la géométrie du thème.</p>
     <p><strong>JD :</strong> ${chart.context.jd.toFixed(6)}</p>
     <p><strong>LST :</strong> ${formatDeg(chart.context.lstDeg)}</p>
     <p><strong>Obliquité :</strong> ${formatDeg(chart.context.epsilonDeg)}</p>

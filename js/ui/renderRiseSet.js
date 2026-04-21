@@ -24,6 +24,7 @@ export function renderRiseSet(chart) {
   const el = document.getElementById('rise-set');
 
   el.innerHTML = `
+    <p><strong>Repère :</strong> lever et coucher sont estimés par recherche itérative sur la journée locale, avec correction d’horizon propre au Soleil et à la Lune.</p>
     ${renderBodyRiseSet('Soleil', chart.riseSet?.sun)}
     ${renderBodyRiseSet('Lune', chart.riseSet?.moon)}
   `;

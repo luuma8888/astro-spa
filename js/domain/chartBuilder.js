@@ -1,13 +1,13 @@
 import { createEmptyChart } from './chartModel.js';
 import { toUtcDate, julianDayFromDate, julianCenturiesSinceJ2000 } from '../core/time.js';
-import { meanObliquityDeg } from '../core/obliquity.js';
+import { trueObliquityDeg } from '../core/obliquity.js';
 import { localSiderealTimeDeg } from '../core/sidereal.js';
 import { computeSun } from '../astronomy/sun.js';
 import { computeMoon } from '../astronomy/moon.js';
 import { computePlanets } from '../astronomy/planets.js';
 import { meanLunarNode, trueLunarNode } from '../astronomy/nodes.js';
 import { evaluateEclipsePotential } from '../astronomy/eclipses.js';
-import { buildMoonPhaseData } from '../astronomy/moonPhases.js';
+import { buildMoonPhaseDataFromBodies } from '../astronomy/moonPhases.js';
 import { computeSunRiseSet, computeMoonRiseSet } from '../astronomy/riseSet.js';
 import { getTropicalSign } from '../astrology/zodiacTropical.js';
 import { getSiderealSign } from '../astrology/zodiacSidereal.js';
@@ -28,7 +28,7 @@ export function buildChart(input, options = {}) {
   const utcDate = toUtcDate(input);
   const jd = julianDayFromDate(utcDate);
   const T = julianCenturiesSinceJ2000(jd);
-  const epsilonDeg = meanObliquityDeg(T);
+  const epsilonDeg = trueObliquityDeg(T);
   const lstDeg = localSiderealTimeDeg(jd, input.longitude);
 
   chart.context = {
@@ -83,26 +83,11 @@ export function buildChart(input, options = {}) {
 
   chart.diagnostics.eclipse = evaluateEclipsePotential(sun.longitudeDeg, moon.longitudeDeg, trueNode);
 
-  chart.moonPhase = buildMoonPhaseData(
-    enrichedBodies.sun.longitudeDeg,
-    enrichedBodies.moon.longitudeDeg
-  );
+  chart.moonPhase = buildMoonPhaseDataFromBodies(enrichedBodies.sun, enrichedBodies.moon);
 
   chart.riseSet = {
-    sun: computeSunRiseSet({
-      raDeg: enrichedBodies.sun.rightAscensionDeg,
-      decDeg: enrichedBodies.sun.declinationDeg,
-      latitudeDeg: input.latitude,
-      longitudeDeg: input.longitude,
-      jd
-    }),
-    moon: computeMoonRiseSet({
-      raDeg: enrichedBodies.moon.rightAscensionDeg,
-      decDeg: enrichedBodies.moon.declinationDeg,
-      latitudeDeg: input.latitude,
-      longitudeDeg: input.longitude,
-      jd
-    })
+    sun: computeSunRiseSet(input),
+    moon: computeMoonRiseSet(input, enrichedBodies.moon)
   };
 
   const aspectPoints = buildAspectPoints(chart);

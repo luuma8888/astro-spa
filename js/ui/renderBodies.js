@@ -3,6 +3,8 @@ import { formatDeg } from './formatters.js';
 export function renderBodies(chart) {
   const el = document.getElementById('bodies');
 
+  const intro = '<p><strong>Repère :</strong> longitude et latitude donnent la position céleste calculée; signes, maisons et constellation sont des lectures dérivées de cette position.</p>';
+
   const html = [
     ['Soleil', chart.bodies.sun],
     ['Lune', chart.bodies.moon],
@@ -19,5 +21,5 @@ export function renderBodies(chart) {
     </div>
   `).join('');
 
-  el.innerHTML = html;
+  el.innerHTML = intro + html;
 }

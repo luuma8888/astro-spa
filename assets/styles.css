@@ -48,6 +48,10 @@ label {
   gap: 0.25rem;
 }
 
+.inline-control {
+  margin-bottom: 0.75rem;
+}
+
 button {
   padding: 0.75rem 1rem;
   cursor: pointer;
@@ -81,6 +85,41 @@ canvas {
   font-size: 1rem;
 }
 
+#synthesis .synthesis-section:first-child h3 {
+  margin-top: 0;
+}
+
 #synthesis p {
   margin: 0.35rem 0;
+}
+
+#clarifications h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+#clarifications h3:first-child {
+  margin-top: 0;
+}
+
+#clarifications p {
+  margin: 0.35rem 0;
+}
+
+.calc-group h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+.calc-group:first-child h3 {
+  margin-top: 0;
+}
+
+.calc-group p {
+  margin: 0.35rem 0;
+}
+
+.muted-note {
+  opacity: 0.75;
+  font-size: 0.92em;
 }
