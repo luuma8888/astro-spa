@@ -47,3 +47,9 @@ Ces seuils sont pragmatiques. Ils sont suffisants pour detecter une regression n
 1. ajouter des cas de test aux solstices, equinoxes et hautes latitudes
 2. ajouter des comparaisons de declinaison solaire et, si possible, de coordonnees lunaires
 3. comparer ensuite le moteur a une reference plus fine pour la Lune si besoin
+
+## Limite connue actuelle
+
+Les cas extremes de Lune continuellement au-dessus ou au-dessous de l'horizon aux hautes latitudes ne sont pas encore inclus dans la suite de validation stricte.
+
+La raison est simple: ces cas restent les plus sensibles aux limites du modele lunaire simplifie. Ils doivent etre testes a part jusqu'a ce que le moteur lunaire soit encore affine.

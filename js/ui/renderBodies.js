@@ -1,4 +1,19 @@
-import { formatDeg } from './formatters.js';
+import { formatDeg, formatIsoUtc, formatIsoWithOffset } from './formatters.js';
+
+function renderMoonConstellationTransition(chart, label, body) {
+  if (label !== 'Lune') return '';
+
+  const transition = chart.diagnostics?.moonConstellationTransition;
+  if (!transition?.to?.name) {
+    return '<p>Prochaine constellation lunaire : indisponible</p>';
+  }
+
+  return `
+    <p>Prochaine constellation lunaire : ${transition.to.name}</p>
+    <p>Passage estimé : ${formatIsoWithOffset(transition.utcIso, chart.input?.utcOffset ?? 0)}</p>
+    <p>Référence UTC : ${formatIsoUtc(transition.utcIso)}</p>
+  `;
+}
 
 export function renderBodies(chart) {
   const el = document.getElementById('bodies');
@@ -18,6 +33,7 @@ export function renderBodies(chart) {
       <p>Signe sidéral : ${body.sidereal.name}</p>
       <p>Maison : ${body.house}</p>
       <p>Constellation : ${body.constellation ? body.constellation.name : 'n/a'}</p>
+      ${renderMoonConstellationTransition(chart, key, body)}
     </div>
   `).join('');
 

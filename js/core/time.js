@@ -12,6 +12,10 @@ export function julianDayFromDate(date) {
   return (date.getTime() / 86400000) + 2440587.5;
 }
 
+export function dateFromJulianDay(jd) {
+  return new Date((jd - 2440587.5) * 86400000);
+}
+
 export function julianCenturiesSinceJ2000(jd) {
   return (jd - 2451545.0) / 36525;
 }

@@ -4,6 +4,7 @@ import { trueObliquityDeg } from '../core/obliquity.js';
 import { localSiderealTimeDeg } from '../core/sidereal.js';
 import { computeSun } from '../astronomy/sun.js';
 import { computeMoon } from '../astronomy/moon.js';
+import { computeNextMoonConstellationTransition } from '../astronomy/moonConstellationTransitions.js';
 import { computePlanets } from '../astronomy/planets.js';
 import { meanLunarNode, trueLunarNode } from '../astronomy/nodes.js';
 import { evaluateEclipsePotential } from '../astronomy/eclipses.js';
@@ -82,6 +83,10 @@ export function buildChart(input, options = {}) {
   }
 
   chart.diagnostics.eclipse = evaluateEclipsePotential(sun.longitudeDeg, moon.longitudeDeg, trueNode);
+  chart.diagnostics.moonConstellationTransition = computeNextMoonConstellationTransition(
+    input,
+    enrichedBodies.moon
+  );
 
   chart.moonPhase = buildMoonPhaseDataFromBodies(enrichedBodies.sun, enrichedBodies.moon);
 

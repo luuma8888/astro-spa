@@ -93,5 +93,43 @@ export const PRECISION_FIXTURES = [
       moonSetLocal: '23:24',
       illuminationPercent: 14
     }
+  },
+  {
+    id: 'new-york-2026-03-20',
+    source: 'https://aa.usno.navy.mil/calculated/rstt/oneday?date=2026-03-20&dst=false&label=New+York&lat=40.71&lon=-74.01&submit=Get+Data&tz=-4.00&tz_label=false&tz_sign=1',
+    label: 'New York, US',
+    input: {
+      date: '2026-03-20',
+      time: '12:00:00',
+      latitude: 40.71,
+      longitude: -74.01,
+      utcOffset: -4
+    },
+    reference: {
+      sunRiseLocal: '06:59',
+      sunSetLocal: '19:08',
+      moonRiseLocal: '07:32',
+      moonSetLocal: '21:24',
+      illuminationPercent: 3
+    }
+  },
+  {
+    id: 'orumieh-2026-03-20',
+    source: 'https://aa.usno.navy.mil/calculated/rstt/oneday?date=2026-03-20&dst=false&label=Orumieh&lat=37.5333&lon=45.0833&submit=Get+Data&tz=3.50&tz_label=false&tz_sign=1',
+    label: 'Orumieh, IR',
+    input: {
+      date: '2026-03-20',
+      time: '12:00:00',
+      latitude: 37.5333,
+      longitude: 45.0833,
+      utcOffset: 3.5
+    },
+    reference: {
+      sunRiseLocal: '06:34',
+      sunSetLocal: '18:41',
+      moonRiseLocal: '07:00',
+      moonSetLocal: '20:28',
+      illuminationPercent: 2
+    }
   }
 ];

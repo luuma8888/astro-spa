@@ -14,6 +14,7 @@ function timeStringToMinutes(time) {
 }
 
 function circularMinutesDiff(a, b) {
+  if (a == null && b == null) return 0;
   const aMinutes = timeStringToMinutes(a);
   const bMinutes = timeStringToMinutes(b);
   if (aMinutes == null || bMinutes == null) return null;
@@ -29,32 +30,44 @@ function evaluateFixture(fixture) {
     {
       key: 'sunrise',
       actual: chart.riseSet.sun?.rise,
-      expected: `${fixture.reference.sunRiseLocal}:00`,
-      delta: circularMinutesDiff(chart.riseSet.sun?.rise, `${fixture.reference.sunRiseLocal}:00`),
+      expected: fixture.reference.sunRiseLocal == null ? null : `${fixture.reference.sunRiseLocal}:00`,
+      delta: circularMinutesDiff(
+        chart.riseSet.sun?.rise,
+        fixture.reference.sunRiseLocal == null ? null : `${fixture.reference.sunRiseLocal}:00`
+      ),
       threshold: THRESHOLDS.sunRiseSetMinutes,
       unit: 'min'
     },
     {
       key: 'sunset',
       actual: chart.riseSet.sun?.set,
-      expected: `${fixture.reference.sunSetLocal}:00`,
-      delta: circularMinutesDiff(chart.riseSet.sun?.set, `${fixture.reference.sunSetLocal}:00`),
+      expected: fixture.reference.sunSetLocal == null ? null : `${fixture.reference.sunSetLocal}:00`,
+      delta: circularMinutesDiff(
+        chart.riseSet.sun?.set,
+        fixture.reference.sunSetLocal == null ? null : `${fixture.reference.sunSetLocal}:00`
+      ),
       threshold: THRESHOLDS.sunRiseSetMinutes,
       unit: 'min'
     },
     {
       key: 'moonrise',
       actual: chart.riseSet.moon?.rise,
-      expected: `${fixture.reference.moonRiseLocal}:00`,
-      delta: circularMinutesDiff(chart.riseSet.moon?.rise, `${fixture.reference.moonRiseLocal}:00`),
+      expected: fixture.reference.moonRiseLocal == null ? null : `${fixture.reference.moonRiseLocal}:00`,
+      delta: circularMinutesDiff(
+        chart.riseSet.moon?.rise,
+        fixture.reference.moonRiseLocal == null ? null : `${fixture.reference.moonRiseLocal}:00`
+      ),
       threshold: THRESHOLDS.moonRiseSetMinutes,
       unit: 'min'
     },
     {
       key: 'moonset',
       actual: chart.riseSet.moon?.set,
-      expected: `${fixture.reference.moonSetLocal}:00`,
-      delta: circularMinutesDiff(chart.riseSet.moon?.set, `${fixture.reference.moonSetLocal}:00`),
+      expected: fixture.reference.moonSetLocal == null ? null : `${fixture.reference.moonSetLocal}:00`,
+      delta: circularMinutesDiff(
+        chart.riseSet.moon?.set,
+        fixture.reference.moonSetLocal == null ? null : `${fixture.reference.moonSetLocal}:00`
+      ),
       threshold: THRESHOLDS.moonRiseSetMinutes,
       unit: 'min'
     },
@@ -75,7 +88,7 @@ function evaluateFixture(fixture) {
 function printCheck(fixture, check) {
   const status = check.delta != null && check.delta <= check.threshold ? 'OK' : 'FAIL';
   console.log(
-    `${status} ${fixture.id} ${check.key} | actual=${check.actual} expected=${check.expected} delta=${check.delta?.toFixed?.(2) ?? 'n/a'} ${check.unit} threshold=${check.threshold}`
+    `${status} ${fixture.id} ${check.key} | actual=${check.actual ?? 'none'} expected=${check.expected ?? 'none'} delta=${check.delta?.toFixed?.(2) ?? 'n/a'} ${check.unit} threshold=${check.threshold}`
   );
 }
 
