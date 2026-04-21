@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "convert:constellations": "node ./tools/convert-constellation-boundaries.js",
     "validate:precision": "node ./tools/validate-precision.mjs"
   }
 }

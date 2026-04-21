@@ -3,6 +3,7 @@ export function createEmptyChart() {
     input: null,
     options: null,
     context: null,
+    calculations: null,
     bodies: {},
     planets: {},
     houses: [],

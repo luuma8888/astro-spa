@@ -33,6 +33,7 @@ export function renderBodies(chart) {
       <p>Signe sidéral : ${body.sidereal.name}</p>
       <p>Maison : ${body.house}</p>
       <p>Constellation : ${body.constellation ? body.constellation.name : 'n/a'}</p>
+      <p>Source constellation : ${body.constellation?.source ?? 'n/a'}</p>
       ${renderMoonConstellationTransition(chart, key, body)}
     </div>
   `).join('');

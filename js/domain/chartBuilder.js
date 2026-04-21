@@ -17,6 +17,7 @@ import { buildHouseSystem, findHouse } from '../astrology/houses.js';
 import { buildAspectPoints, getAllAspects } from '../astrology/aspects.js';
 import { buildSymbolicBodyData } from '../symbolic/correspondences.js';
 import { buildChartSynthesis } from './synthesis.js';
+import { buildCalculationGroups } from './calculationGroups.js';
 
 export function buildChart(input, options = {}) {
   const chart = createEmptyChart();
@@ -97,6 +98,7 @@ export function buildChart(input, options = {}) {
 
   const aspectPoints = buildAspectPoints(chart);
   chart.aspects = getAllAspects(aspectPoints);
+  chart.calculations = buildCalculationGroups(chart);
   chart.synthesis = buildChartSynthesis(chart);
 
   return chart;
