@@ -91,6 +91,7 @@ function chartNeedsRebuild(chart) {
   if (!chart?.moonPhase?.presentation) return true;
   if (!chart?.moonPhase?.presentation?.trueAgeText) return true;
   if (!chart?.moonPhase?.presentation?.nextMajorPhaseText) return true;
+  if (!chart?.moonPhase?.presentation?.nextNodeText) return true;
   if (!chart?.riseSet?.sun?.presentation) return true;
   if (!chart?.riseSet?.moon?.presentation) return true;
   if (!chart?.anglePresentation) return true;

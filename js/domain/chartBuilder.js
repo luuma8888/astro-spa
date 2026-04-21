@@ -19,6 +19,7 @@ import { computePlanets } from '../astronomy/planets.js';
 import { meanLunarNode, trueLunarNode } from '../astronomy/nodes.js';
 import { evaluateEclipsePotential } from '../astronomy/eclipses.js';
 import { buildMoonPhaseDataFromBodiesAtJd } from '../astronomy/moonPhases.js';
+import { computeMoonOrbitEvents } from '../astronomy/moonOrbitEvents.js';
 import { computeSunRiseSet, computeMoonRiseSet } from '../astronomy/riseSet.js';
 import { getTropicalSign } from '../astrology/zodiacTropical.js';
 import { getSiderealSign } from '../astrology/zodiacSidereal.js';
@@ -103,14 +104,33 @@ export function buildChart(input, options = {}) {
   );
 
   chart.moonPhase = buildMoonPhaseDataFromBodiesAtJd(enrichedBodies.sun, enrichedBodies.moon, jd);
-  chart.moonPhase.presentation = createMoonPhasePresentation(chart.moonPhase, input.utcOffset);
-
   chart.riseSet = {
     sun: computeSunRiseSet(input),
     moon: computeMoonRiseSet(input, enrichedBodies.moon)
   };
   chart.riseSet.sun.presentation = createRiseSetPresentation(chart.riseSet.sun);
   chart.riseSet.moon.presentation = createRiseSetPresentation(chart.riseSet.moon);
+  chart.diagnostics.moonOrbit = computeMoonOrbitEvents(
+    jd,
+    {
+      ...enrichedBodies.moon,
+      phaseLabel: chart.moonPhase.label
+    },
+    chart.riseSet.moon
+  );
+  chart.moonPhase = {
+    ...chart.moonPhase,
+    currentConstellation: chart.diagnostics.moonOrbit.currentConstellation ?? enrichedBodies.moon.constellation ?? null,
+    nextConstellationTransition: chart.diagnostics.moonConstellationTransition ?? null,
+    visibilityText: chart.diagnostics.moonOrbit.visibilityText ?? null,
+    trajectoryText: chart.diagnostics.moonOrbit.trajectoryText ?? null,
+    nextNode: chart.diagnostics.moonOrbit.nextNode ?? null,
+    nextPerigee: chart.diagnostics.moonOrbit.nextPerigee ?? null,
+    nextApogee: chart.diagnostics.moonOrbit.nextApogee ?? null,
+    nextLunarEclipse: chart.diagnostics.moonOrbit.nextLunarEclipse ?? null,
+    riseSet: chart.riseSet.moon
+  };
+  chart.moonPhase.presentation = createMoonPhasePresentation(chart.moonPhase, input.utcOffset);
 
   const aspectPoints = buildAspectPoints(chart);
   chart.aspects = getAllAspects(aspectPoints);

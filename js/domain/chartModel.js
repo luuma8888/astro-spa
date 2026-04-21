@@ -22,6 +22,23 @@ function formatClock(value) {
   return value ?? 'n/a';
 }
 
+function formatClockWithOffset(value, utcOffsetHours = 0) {
+  if (!value) return 'n/a';
+  const parts = value.split(':').map(Number);
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) return 'n/a';
+
+  let totalSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+  totalSeconds += Math.round(utcOffsetHours * 3600);
+  totalSeconds %= 86400;
+  if (totalSeconds < 0) totalSeconds += 86400;
+
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+  return `${hours}:${minutes}:${seconds}`;
+}
+
 function formatIsoUtcText(isoString) {
   const date = new Date(isoString);
   if (Number.isNaN(date.getTime())) return 'n/a';
@@ -119,6 +136,50 @@ function formatPhaseEvent(event, utcOffsetHours = 0) {
   };
 }
 
+function formatMoonRiseSet(riseSet, utcOffsetHours = 0) {
+  if (!riseSet) return null;
+
+  const status = riseSet.neverRises ? 'never-rises' : riseSet.circumpolar ? 'circumpolar' : 'normal';
+  const statusText = status === 'never-rises'
+    ? 'ne se lève pas à cette latitude / date'
+    : status === 'circumpolar'
+      ? 'circumpolaire'
+      : 'normal';
+
+  return {
+    status,
+    statusText,
+    riseUtcText: formatClock(riseSet.rise),
+    setUtcText: formatClock(riseSet.set),
+    riseLocalText: formatClockWithOffset(riseSet.rise, utcOffsetHours),
+    setLocalText: formatClockWithOffset(riseSet.set, utcOffsetHours)
+  };
+}
+
+function formatConstellationTransition(transition, utcOffsetHours = 0) {
+  if (!transition?.utcIso) return null;
+
+  return {
+    fromText: transition.from?.name ?? 'n/a',
+    toText: transition.to?.name ?? 'n/a',
+    localText: formatIsoWithOffsetText(transition.utcIso, utcOffsetHours),
+    utcText: formatIsoUtcText(transition.utcIso)
+  };
+}
+
+function formatOrbitEvent(event, utcOffsetHours = 0) {
+  if (!event?.utcIso) return null;
+
+  return {
+    labelText: event.label ?? 'n/a',
+    localText: formatIsoWithOffsetText(event.utcIso, utcOffsetHours),
+    utcText: formatIsoUtcText(event.utcIso),
+    distanceText: Number.isFinite(event.distanceKm) ? `${Math.round(event.distanceKm).toLocaleString('fr-FR')} km` : null,
+    eclipseTypeText: event.eclipseType ?? null,
+    nodeDeltaText: Number.isFinite(event.nodeDeltaDeg) ? formatDegrees(event.nodeDeltaDeg, 2) : null
+  };
+}
+
 export function createMoonPhasePresentation(phase, utcOffsetHours = 0) {
   if (!phase) return null;
 
@@ -136,7 +197,17 @@ export function createMoonPhasePresentation(phase, utcOffsetHours = 0) {
       : 'n/a',
     cycleLengthText: `${formatNumeric(phase.synodicCycleLengthDays ?? 29.530588853)} jours`,
     previousMajorPhaseText: formatPhaseEvent(phase.previousMajorPhase, utcOffsetHours),
-    nextMajorPhaseText: formatPhaseEvent(phase.nextMajorPhase, utcOffsetHours)
+    nextMajorPhaseText: formatPhaseEvent(phase.nextMajorPhase, utcOffsetHours),
+    currentConstellationText: phase.currentConstellation?.name ?? 'n/a',
+    currentConstellationSourceText: phase.currentConstellation?.source ?? 'n/a',
+    nextConstellationText: formatConstellationTransition(phase.nextConstellationTransition, utcOffsetHours),
+    visibilityText: phase.visibilityText ?? 'n/a',
+    trajectoryText: phase.trajectoryText ?? 'n/a',
+    riseSetText: formatMoonRiseSet(phase.riseSet, utcOffsetHours),
+    nextNodeText: formatOrbitEvent(phase.nextNode, utcOffsetHours),
+    nextPerigeeText: formatOrbitEvent(phase.nextPerigee, utcOffsetHours),
+    nextApogeeText: formatOrbitEvent(phase.nextApogee, utcOffsetHours),
+    nextLunarEclipseText: formatOrbitEvent(phase.nextLunarEclipse, utcOffsetHours)
   };
 }
 

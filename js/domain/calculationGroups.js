@@ -156,6 +156,28 @@ function buildAstrologyGroup(chart) {
 function buildLunarGroup(chart) {
   const phase = chart.moonPhase;
   const transition = chart.diagnostics?.moonConstellationTransition;
+  const orbit = chart.diagnostics?.moonOrbit;
+  const riseSet = chart.riseSet?.moon;
+
+  const nextNodeText = orbit?.nextNode?.utcIso
+    ? `${orbit.nextNode.label} — ${formatIsoWithOffset(orbit.nextNode.utcIso, chart.input?.utcOffset ?? 0)}`
+    : 'indisponible';
+  const nextPerigeeText = orbit?.nextPerigee?.utcIso
+    ? `${formatIsoWithOffset(orbit.nextPerigee.utcIso, chart.input?.utcOffset ?? 0)} — ${Math.round(orbit.nextPerigee.distanceKm).toLocaleString('fr-FR')} km`
+    : 'indisponible';
+  const nextApogeeText = orbit?.nextApogee?.utcIso
+    ? `${formatIsoWithOffset(orbit.nextApogee.utcIso, chart.input?.utcOffset ?? 0)} — ${Math.round(orbit.nextApogee.distanceKm).toLocaleString('fr-FR')} km`
+    : 'indisponible';
+  const nextEclipseText = orbit?.nextLunarEclipse?.utcIso
+    ? `${formatIsoWithOffset(orbit.nextLunarEclipse.utcIso, chart.input?.utcOffset ?? 0)} — ${orbit.nextLunarEclipse.eclipseType}`
+    : 'indisponible';
+  const riseSetText = riseSet?.neverRises
+    ? 'ne se lève pas à cette latitude / date'
+    : riseSet?.circumpolar
+      ? 'circumpolaire'
+      : riseSet
+        ? `lever ${riseSet.rise ?? 'n/a'} UTC / coucher ${riseSet.set ?? 'n/a'} UTC`
+        : 'indisponible';
 
   return createCalculationGroup({
     key: 'lunar',
@@ -213,6 +235,62 @@ function buildLunarGroup(chart) {
         method: 'Recherche iterative du prochain changement de zone de constellation.',
         usage: 'Anticipe le prochain passage stellaire lunaire.',
         expectedPrecision: transition?.utcIso ? `${formatIsoWithOffset(transition.utcIso, chart.input?.utcOffset ?? 0)} / ${formatIsoUtc(transition.utcIso)}` : 'n/a'
+      }),
+      entry({
+        key: 'moon-visibility',
+        label: 'Visibilité lunaire',
+        value: phase?.visibilityText ?? 'indisponible',
+        category: 'lunar',
+        method: 'Heuristique issue de la phase et du comportement lever/coucher.',
+        usage: 'Donne une lecture pratique de la visibilité probable.'
+      }),
+      entry({
+        key: 'moon-trajectory',
+        label: 'Trajectoire lunaire',
+        value: phase?.trajectoryText ?? 'indisponible',
+        category: 'lunar',
+        method: 'Lecture de la latitude écliptique et de la direction vers le prochain nœud.',
+        usage: 'Situe la Lune par rapport au plan de l écliptique.'
+      }),
+      entry({
+        key: 'moon-rise-set',
+        label: 'Lever / coucher de la Lune',
+        value: riseSetText,
+        category: 'lunar',
+        method: 'Recherche itérative de franchissement d horizon lunaire apparent.',
+        usage: 'Informe sur la présence de la Lune au-dessus de l horizon local.'
+      }),
+      entry({
+        key: 'moon-next-node',
+        label: 'Prochain nœud lunaire',
+        value: nextNodeText,
+        category: 'lunar',
+        method: 'Recherche du prochain croisement de latitude écliptique nulle.',
+        usage: 'Repère le prochain passage nodal de la Lune.'
+      }),
+      entry({
+        key: 'moon-next-perigee',
+        label: 'Prochain périgée',
+        value: nextPerigeeText,
+        category: 'lunar',
+        method: 'Recherche du prochain minimum de distance Terre-Lune.',
+        usage: 'Anticipe le prochain resserrement orbital lunaire.'
+      }),
+      entry({
+        key: 'moon-next-apogee',
+        label: 'Prochain apogée',
+        value: nextApogeeText,
+        category: 'lunar',
+        method: 'Recherche du prochain maximum de distance Terre-Lune.',
+        usage: 'Anticipe le prochain éloignement orbital lunaire.'
+      }),
+      entry({
+        key: 'moon-next-eclipse',
+        label: 'Prochaine éclipse de Lune',
+        value: nextEclipseText,
+        category: 'lunar',
+        method: 'Recherche de la prochaine Pleine Lune proche d un nœud.',
+        usage: 'Signale la prochaine opportunité d éclipse lunaire.'
       })
     ]
   });
