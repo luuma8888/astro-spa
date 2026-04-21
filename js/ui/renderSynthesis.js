@@ -40,6 +40,7 @@ export function renderSynthesis(chart, level = 'medium') {
     : sections.aspects?.slice(0, 3);
   const html = `
     ${renderSection('Synthèse finale', overview)}
+    ${showDetailedSections ? renderSection('Cadre méthode', sections.method) : ''}
     ${showDetailedSections ? renderSection('Trépied central', sections.core) : ''}
     ${showDetailedSections ? renderSection('Dominantes', sections.dominants) : ''}
     ${showDetailedSections ? renderSection('Corps principaux', bodyItems) : ''}

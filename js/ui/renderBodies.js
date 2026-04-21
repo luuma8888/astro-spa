@@ -27,13 +27,13 @@ export function renderBodies(chart) {
   ].map(([key, body]) => `
     <div>
       <h3>${key}</h3>
-      <p>Longitude : ${formatDeg(body.longitudeDeg)}</p>
-      <p>Latitude : ${formatDeg(body.latitudeDeg)}</p>
-      <p>Signe tropical : ${body.tropical.name}</p>
-      <p>Signe sidéral : ${body.sidereal.name}</p>
-      <p>Maison : ${body.house}</p>
-      <p>Constellation : ${body.constellation ? body.constellation.name : 'n/a'}</p>
-      <p>Source constellation : ${body.constellation?.source ?? 'n/a'}</p>
+      <p>Longitude : ${body.presentation?.longitudeText ?? formatDeg(body.longitudeDeg)}</p>
+      <p>Latitude : ${body.presentation?.latitudeText ?? formatDeg(body.latitudeDeg)}</p>
+      <p>Signe tropical : ${body.presentation?.tropicalSignText ?? body.tropical.name}</p>
+      <p>Signe sidéral : ${body.presentation?.siderealSignText ?? body.sidereal.name}</p>
+      <p>Maison : ${body.presentation?.houseText ?? body.house}</p>
+      <p>Constellation : ${body.presentation?.constellationText ?? (body.constellation ? body.constellation.name : 'n/a')}</p>
+      <p>Source constellation : ${body.presentation?.constellationSourceText ?? body.constellation?.source ?? 'n/a'}</p>
       ${renderMoonConstellationTransition(chart, key, body)}
     </div>
   `).join('');

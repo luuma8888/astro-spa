@@ -1,8 +1,8 @@
 const SIGN_NAMES = ['Bélier', 'Taureau', 'Gémeaux', 'Cancer', 'Lion', 'Vierge', 'Balance', 'Scorpion', 'Sagittaire', 'Capricorne', 'Verseau', 'Poissons'];
 
 function formatPlacement(label, body) {
-  const sign = body?.tropical?.name ?? 'inconnu';
-  const house = body?.house ?? '?';
+  const sign = body?.presentation?.tropicalSignText ?? body?.tropical?.name ?? 'inconnu';
+  const house = body?.presentation?.houseText ?? body?.house ?? '?';
   const degree = Number.isFinite(body?.tropical?.degreeInSign)
     ? body.tropical.degreeInSign.toFixed(2)
     : '?';
@@ -166,7 +166,7 @@ function summarizeCoreTripod(chart) {
   }
 
   if (chart.angles?.asc != null) {
-    lines.push(`Ascendant à ${chart.angles.asc.toFixed(2)}°.`);
+    lines.push(`Ascendant à ${chart.anglePresentation?.ascText ?? `${chart.angles.asc.toFixed(2)}°`}.`);
     lines.push(buildAscMeaning(chart));
   }
 
@@ -192,13 +192,15 @@ function summarizeAspects(chart) {
   }
 
   return ranked.map((item) => {
-    const emphasis = item.orb <= 1.5
-      ? 'Aspect très serré'
-      : item.orb <= 3
-        ? 'Aspect structurant'
-        : 'Aspect notable';
+    const emphasis = item.presentation?.emphasisText ?? (
+      item.orb <= 1.5
+        ? 'Aspect très serré'
+        : item.orb <= 3
+          ? 'Aspect structurant'
+          : 'Aspect notable'
+    );
 
-    return `${emphasis} : ${item.bodyA} ${item.aspect} ${item.bodyB}, orbe ${item.orb.toFixed(2)}°.`;
+    return `${emphasis} : ${item.presentation?.summaryText ?? `${item.bodyA} ${item.aspect} ${item.bodyB}`}, orbe ${item.presentation?.orbText ?? `${item.orb.toFixed(2)}°`}.`;
   });
 }
 
@@ -206,11 +208,17 @@ function summarizeMoonPhase(chart) {
   const phase = chart.moonPhase;
   if (!phase) return ['Phase lunaire indisponible.'];
 
-  return [
-    `Phase lunaire : ${phase.label}.`,
-    `Illumination : ${phase.illuminationPercent.toFixed(2)}%.`,
-    `Âge lunaire : ${phase.ageDays.toFixed(2)} jours.`
+  const lines = [
+    `Phase lunaire : ${phase.presentation?.labelText ?? phase.label}.`,
+    `Illumination : ${phase.presentation?.illuminationText ?? `${phase.illuminationPercent.toFixed(2)}%`}.`,
+    `Âge lunaire réel : ${phase.presentation?.trueAgeText ?? `${phase.trueAgeDays?.toFixed?.(2) ?? phase.ageDays.toFixed(2)} jours`}.`
   ];
+
+  if (phase.presentation?.nextMajorPhaseText) {
+    lines.push(`Prochaine phase majeure : ${phase.presentation.nextMajorPhaseText.labelText}, ${phase.presentation.nextMajorPhaseText.localText}.`);
+  }
+
+  return lines;
 }
 
 function summarizeRiseSet(chart) {
@@ -219,11 +227,35 @@ function summarizeRiseSet(chart) {
   const lines = [];
 
   if (sun) {
-    lines.push(`Soleil — lever: ${sun.rise ?? 'n/a'} UTC, coucher: ${sun.set ?? 'n/a'} UTC.`);
+    lines.push(`Soleil — lever: ${sun.presentation?.riseText ?? sun.rise ?? 'n/a'} UTC, coucher: ${sun.presentation?.setText ?? sun.set ?? 'n/a'} UTC.`);
   }
 
   if (moon) {
-    lines.push(`Lune — lever: ${moon.rise ?? 'n/a'} UTC, coucher: ${moon.set ?? 'n/a'} UTC.`);
+    lines.push(`Lune — lever: ${moon.presentation?.riseText ?? moon.rise ?? 'n/a'} UTC, coucher: ${moon.presentation?.setText ?? moon.set ?? 'n/a'} UTC.`);
+  }
+
+  return lines;
+}
+
+function summarizeMethodBoundary(chart) {
+  const precision = chart?.meta?.precision;
+  const policy = chart?.meta?.interpretationPolicy ?? [];
+  const lines = [];
+
+  if (precision?.coreAstronomy?.summary) {
+    lines.push(`Calcul astronomique: ${precision.coreAstronomy.summary}`);
+  }
+
+  if (precision?.derivedAstrology?.summary) {
+    lines.push(`Lecture dérivée: ${precision.derivedAstrology.summary}`);
+  }
+
+  if (precision?.interpretation?.summary) {
+    lines.push(`Traduction humaine: ${precision.interpretation.summary}`);
+  }
+
+  if (policy[0]) {
+    lines.push(`Cadre de lecture: ${policy[0]}`);
   }
 
   return lines;
@@ -250,7 +282,7 @@ function buildShortOverview(chart, dominants, rankedAspects) {
   }
 
   if (mainAspect) {
-    lines.push(`Le point de tension ou de cohérence principal semble passer par ${mainAspect.bodyA} ${mainAspect.aspect} ${mainAspect.bodyB} (orbe ${mainAspect.orb.toFixed(2)}°).`);
+    lines.push(`Le point de tension ou de cohérence principal semble passer par ${mainAspect.presentation?.summaryText ?? `${mainAspect.bodyA} ${mainAspect.aspect} ${mainAspect.bodyB}`} (orbe ${mainAspect.presentation?.orbText ?? `${mainAspect.orb.toFixed(2)}°`}).`);
   }
 
   return lines;
@@ -265,7 +297,7 @@ function buildMediumOverview(chart, dominants, rankedAspects) {
   lines.push(`Le Soleil agit surtout dans ${houseTone(sunHouse)}, tandis que la Lune ramène l’expérience vers ${houseTone(moonHouse)}.`);
 
   if (topAspect.length) {
-    lines.push(`Les aspects les plus parlants sont ${topAspect.map((item) => `${item.bodyA} ${item.aspect} ${item.bodyB}`).join(' et ')}.`);
+    lines.push(`Les aspects les plus parlants sont ${topAspect.map((item) => item.presentation?.summaryText ?? `${item.bodyA} ${item.aspect} ${item.bodyB}`).join(' et ')}.`);
   }
 
   return lines;
@@ -277,11 +309,11 @@ function buildLongOverview(chart, dominants, rankedAspects) {
   const riseSet = chart.riseSet?.sun;
 
   if (moonPhase) {
-    lines.push(`La phase lunaire actuelle est ${moonPhase.toLowerCase()}, ce qui nuance le rythme global du thème.`);
+    lines.push(`La phase lunaire actuelle est ${(chart.moonPhase?.presentation?.labelText ?? moonPhase).toLowerCase()}, ce qui nuance le rythme global du thème.`);
   }
 
   if (riseSet?.rise && riseSet?.set) {
-    lines.push(`Le contexte local garde aussi un ancrage concret avec un lever du Soleil à ${riseSet.rise} UTC et un coucher à ${riseSet.set} UTC.`);
+    lines.push(`Le contexte local garde aussi un ancrage concret avec un lever du Soleil à ${riseSet.presentation?.riseText ?? riseSet.rise} UTC et un coucher à ${riseSet.presentation?.setText ?? riseSet.set} UTC.`);
   }
 
   if (dominants.topSigns.length > 1) {
@@ -302,6 +334,7 @@ export function buildChartSynthesis(chart) {
       long: buildLongOverview(chart, dominants, rankedAspects)
     },
     sections: {
+      method: summarizeMethodBoundary(chart),
       core: summarizeCoreTripod(chart),
       dominants: summarizeDominants(chart),
       bodies: summarizeMajorBodies(chart),

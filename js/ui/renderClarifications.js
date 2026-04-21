@@ -17,7 +17,18 @@ export function renderClarifications(chart) {
     return;
   }
 
+  const precision = chart?.meta?.precision;
+  const policy = chart?.meta?.interpretationPolicy ?? [];
+
   el.innerHTML = `
+    <div>
+      <h3>Cadre de fiabilité</h3>
+      <p><strong>Calcul astronomique</strong> : ${precision?.coreAstronomy?.summary ?? 'n/a'}</p>
+      <p><strong>Lecture dérivée</strong> : ${precision?.derivedAstrology?.summary ?? 'n/a'}</p>
+      <p><strong>Traduction humaine</strong> : ${precision?.interpretation?.summary ?? 'n/a'}</p>
+      <p><strong>Base de contrôle</strong> : ${precision?.coreAstronomy?.evidence ?? 'n/a'}</p>
+      ${policy.map((line) => `<p>${line}</p>`).join('')}
+    </div>
     <div>
       <h3>Astro technique</h3>
       <p><strong>JD</strong> correspond au jour julien, la base continue utilisée pour enchaîner les calculs astronomiques.</p>

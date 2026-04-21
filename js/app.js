@@ -12,6 +12,7 @@ import { renderHouses } from './ui/renderHouses.js';
 import { renderSymbolic } from './ui/renderSymbolic.js';
 import { renderAspects } from './ui/renderAspects.js';
 import { renderMoonPhase } from './ui/renderMoonPhase.js';
+import { renderMoonDiagnostics } from './ui/renderMoonDiagnostics.js';
 import { renderRiseSet } from './ui/renderRiseSet.js';
 import { renderChartWheel } from './ui/renderChartWheel.js';
 import { renderTransits } from './ui/renderTransits.js';
@@ -81,6 +82,22 @@ function chartNeedsRebuild(chart) {
   if (!chart?.context) return false;
   if (!chart?.synthesis) return true;
   if (!chart.synthesis.overview || !chart.synthesis.sections) return true;
+  if (!chart?.calculations) return true;
+  if (Array.isArray(chart.calculations)) return true;
+  if (!Array.isArray(chart.calculations.groups)) return true;
+  if (!chart.calculations.byKey || typeof chart.calculations.byKey !== 'object') return true;
+  if (!chart?.bodies?.sun?.presentation) return true;
+  if (!chart?.bodies?.moon?.presentation) return true;
+  if (!chart?.moonPhase?.presentation) return true;
+  if (!chart?.moonPhase?.presentation?.trueAgeText) return true;
+  if (!chart?.moonPhase?.presentation?.nextMajorPhaseText) return true;
+  if (!chart?.riseSet?.sun?.presentation) return true;
+  if (!chart?.riseSet?.moon?.presentation) return true;
+  if (!chart?.anglePresentation) return true;
+  if (!Array.isArray(chart?.houseDetails)) return true;
+  if ((chart?.aspects ?? []).some((aspect) => !aspect?.presentation)) return true;
+  if (!chart?.meta?.precision?.coreAstronomy) return true;
+  if (!Array.isArray(chart?.meta?.interpretationPolicy)) return true;
   return false;
 }
 
@@ -188,6 +205,7 @@ function renderChart(chart) {
   renderSymbolic(chart);
   renderAspects(chart);
   renderMoonPhase(chart);
+  renderMoonDiagnostics(chart);
   renderRiseSet(chart);
   renderChartWheel(chart);
   renderSynthesis(chart, uiState.synthesisLevel);

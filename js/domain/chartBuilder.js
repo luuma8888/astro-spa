@@ -1,4 +1,14 @@
-import { createEmptyChart } from './chartModel.js';
+import {
+  createAnglesPresentation,
+  createAspectPresentation,
+  createBodyPresentation,
+  createCalculationCatalog,
+  createEmptyChart,
+  createHouseDetails,
+  createModelMeta,
+  createMoonPhasePresentation,
+  createRiseSetPresentation
+} from './chartModel.js';
 import { toUtcDate, julianDayFromDate, julianCenturiesSinceJ2000 } from '../core/time.js';
 import { trueObliquityDeg } from '../core/obliquity.js';
 import { localSiderealTimeDeg } from '../core/sidereal.js';
@@ -8,7 +18,7 @@ import { computeNextMoonConstellationTransition } from '../astronomy/moonConstel
 import { computePlanets } from '../astronomy/planets.js';
 import { meanLunarNode, trueLunarNode } from '../astronomy/nodes.js';
 import { evaluateEclipsePotential } from '../astronomy/eclipses.js';
-import { buildMoonPhaseDataFromBodies } from '../astronomy/moonPhases.js';
+import { buildMoonPhaseDataFromBodiesAtJd } from '../astronomy/moonPhases.js';
 import { computeSunRiseSet, computeMoonRiseSet } from '../astronomy/riseSet.js';
 import { getTropicalSign } from '../astrology/zodiacTropical.js';
 import { getSiderealSign } from '../astrology/zodiacSidereal.js';
@@ -22,6 +32,7 @@ import { buildCalculationGroups } from './calculationGroups.js';
 export function buildChart(input, options = {}) {
   const chart = createEmptyChart();
   chart.input = input;
+  chart.meta = createModelMeta();
   chart.options = {
     houseSystem: options.houseSystem ?? 'porphyry',
     ayanamsa: options.ayanamsa ?? 'lahiri'
@@ -72,6 +83,8 @@ export function buildChart(input, options = {}) {
   chart.nodes = { meanNode, trueNode };
   chart.houses = houseCusps;
   chart.angles = houseSystem.angles;
+  chart.anglePresentation = createAnglesPresentation(chart.angles);
+  chart.houseDetails = createHouseDetails(chart.houses);
   chart.houseSystem = houseSystem.system;
 
   chart.symbolic = {
@@ -89,16 +102,23 @@ export function buildChart(input, options = {}) {
     enrichedBodies.moon
   );
 
-  chart.moonPhase = buildMoonPhaseDataFromBodies(enrichedBodies.sun, enrichedBodies.moon);
+  chart.moonPhase = buildMoonPhaseDataFromBodiesAtJd(enrichedBodies.sun, enrichedBodies.moon, jd);
+  chart.moonPhase.presentation = createMoonPhasePresentation(chart.moonPhase, input.utcOffset);
 
   chart.riseSet = {
     sun: computeSunRiseSet(input),
     moon: computeMoonRiseSet(input, enrichedBodies.moon)
   };
+  chart.riseSet.sun.presentation = createRiseSetPresentation(chart.riseSet.sun);
+  chart.riseSet.moon.presentation = createRiseSetPresentation(chart.riseSet.moon);
 
   const aspectPoints = buildAspectPoints(chart);
   chart.aspects = getAllAspects(aspectPoints);
-  chart.calculations = buildCalculationGroups(chart);
+  chart.aspects = chart.aspects.map((aspect) => ({
+    ...aspect,
+    presentation: createAspectPresentation(aspect)
+  }));
+  chart.calculations = createCalculationCatalog(buildCalculationGroups(chart));
   chart.synthesis = buildChartSynthesis(chart);
 
   return chart;
@@ -115,6 +135,13 @@ function enrichBody(body, houseCusps, ayanamsaKey) {
     tropical,
     sidereal,
     constellation,
-    house
+    house,
+    presentation: createBodyPresentation({
+      ...body,
+      tropical,
+      sidereal,
+      constellation,
+      house
+    })
   };
 }

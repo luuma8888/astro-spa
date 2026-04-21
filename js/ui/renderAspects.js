@@ -13,8 +13,8 @@ export function renderAspects(chart) {
         <strong>${item.bodyA}</strong>
         ${item.aspect}
         <strong>${item.bodyB}</strong>
-        — angle: ${item.delta.toFixed(2)}°
-        — orbe: ${item.orb.toFixed(2)}°
+        — angle: ${item.presentation?.angleText ?? `${item.delta.toFixed(2)}°`}
+        — orbe: ${item.presentation?.orbText ?? `${item.orb.toFixed(2)}°`}
       </p>
     `).join('')}
   `;

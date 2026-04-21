@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "convert:constellations": "node ./tools/convert-constellation-boundaries.js",
-    "validate:precision": "node ./tools/validate-precision.mjs"
+    "validate:precision": "node ./tools/validate-precision.mjs",
+    "diagnose:moon-phase": "node ./tools/diagnose-moon-phase.mjs"
   }
 }

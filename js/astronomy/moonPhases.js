@@ -1,7 +1,9 @@
 import { normalizeDeg, degToRad, radToDeg } from '../core/angles.js';
+import { computeMoonPhaseEventsAround } from './moonPhaseEvents.js';
 
 const SYNODIC_MONTH = 29.530588853;
 const KM_PER_AU = 149597870.7;
+const MOON_RADIUS_KM = 1737.4;
 
 export function moonPhaseAngle(sunLonDeg, moonLonDeg) {
   return normalizeDeg(moonLonDeg - sunLonDeg);
@@ -82,5 +84,38 @@ export function buildMoonPhaseDataFromBodies(sunBody, moonBody) {
     label: getMoonPhaseLabel(sunBody.longitudeDeg, moonBody.longitudeDeg),
     waxing,
     waning: !waxing
+  };
+}
+
+export function buildMoonPhaseDataFromBodiesAtJd(sunBody, moonBody, jd) {
+  const phase = buildMoonPhaseDataFromBodies(sunBody, moonBody);
+  const events = computeMoonPhaseEventsAround(jd);
+  const previousNewMoon = events.previousByKey.newMoon ?? null;
+  const nextNewMoon = events.nextByKey.newMoon ?? null;
+  const currentCycleLengthDays = previousNewMoon && nextNewMoon
+    ? nextNewMoon.jd - previousNewMoon.jd
+    : SYNODIC_MONTH;
+  const trueAgeDays = previousNewMoon ? jd - previousNewMoon.jd : phase.ageDays;
+  const synodicProgress = currentCycleLengthDays > 0 ? trueAgeDays / currentCycleLengthDays : null;
+  const apparentAngularDiameterDeg = Number.isFinite(moonBody?.distanceKm) && moonBody.distanceKm > 0
+    ? radToDeg(2 * Math.atan(MOON_RADIUS_KM / moonBody.distanceKm))
+    : null;
+
+  return {
+    ...phase,
+    jd,
+    distanceKm: moonBody?.distanceKm ?? null,
+    trueAgeDays,
+    synodicCycleLengthDays: currentCycleLengthDays,
+    synodicProgress,
+    apparentAngularDiameterDeg,
+    apparentAngularDiameterArcMin: Number.isFinite(apparentAngularDiameterDeg)
+      ? apparentAngularDiameterDeg * 60
+      : null,
+    previousMajorPhase: events.previous[0] ?? null,
+    nextMajorPhase: events.next[0] ?? null,
+    previousNewMoon,
+    nextNewMoon,
+    events
   };
 }
