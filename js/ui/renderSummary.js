@@ -10,18 +10,31 @@ function getCalculationValueText(chart, key, fallback) {
 
 export function renderSummary(chart) {
   const el = document.getElementById('summary');
+  const items = [
+    ['JD', getCalculationValueText(chart, 'jd', chart.context.jd.toFixed(6))],
+    ['LST', getCalculationValueText(chart, 'lst', formatDeg(chart.context.lstDeg))],
+    ['Obliquité', getCalculationValueText(chart, 'obliquity', formatDeg(chart.context.epsilonDeg))],
+    ['Asc', getCalculationValueText(chart, 'asc', formatDeg(chart.angles.asc))],
+    ['MC', getCalculationValueText(chart, 'mc', formatDeg(chart.angles.mc))],
+    ['Desc', getCalculationValueText(chart, 'desc', formatDeg(chart.angles.desc))],
+    ['IC', getCalculationValueText(chart, 'ic', formatDeg(chart.angles.ic))],
+    ['Système', getCalculationValueText(chart, 'house-system', chart.houseSystem)],
+    ['Ayanamsa', getCalculationValueText(chart, 'ayanamsa', chart.options?.ayanamsa ?? 'lahiri')],
+    ['Nœud moyen', getCalculationValueText(chart, 'mean-node', formatDeg(chart.nodes.meanNode))],
+    ['Nœud vrai', getCalculationValueText(chart, 'true-node', formatDeg(chart.nodes.trueNode))]
+  ];
+
   el.innerHTML = `
-    <p><strong>Repère :</strong> ce bloc rassemble les valeurs techniques utilisées pour produire les positions et la géométrie du thème.</p>
-    <p><strong>JD :</strong> ${getCalculationValueText(chart, 'jd', chart.context.jd.toFixed(6))}</p>
-    <p><strong>LST :</strong> ${getCalculationValueText(chart, 'lst', formatDeg(chart.context.lstDeg))}</p>
-    <p><strong>Obliquité :</strong> ${getCalculationValueText(chart, 'obliquity', formatDeg(chart.context.epsilonDeg))}</p>
-    <p><strong>Asc :</strong> ${getCalculationValueText(chart, 'asc', formatDeg(chart.angles.asc))}</p>
-    <p><strong>MC :</strong> ${getCalculationValueText(chart, 'mc', formatDeg(chart.angles.mc))}</p>
-    <p><strong>Desc :</strong> ${getCalculationValueText(chart, 'desc', formatDeg(chart.angles.desc))}</p>
-    <p><strong>IC :</strong> ${getCalculationValueText(chart, 'ic', formatDeg(chart.angles.ic))}</p>
-    <p><strong>Système :</strong> ${getCalculationValueText(chart, 'house-system', chart.houseSystem)}</p>
-    <p><strong>Ayanamsa :</strong> ${getCalculationValueText(chart, 'ayanamsa', chart.options?.ayanamsa ?? 'lahiri')}</p>
-    <p><strong>Nœud moyen :</strong> ${getCalculationValueText(chart, 'mean-node', formatDeg(chart.nodes.meanNode))}</p>
-    <p><strong>Nœud vrai :</strong> ${getCalculationValueText(chart, 'true-node', formatDeg(chart.nodes.trueNode))}</p>
+    <div class="section-block section-block-intro">
+      <p>Ce bloc rassemble les valeurs techniques les plus structurantes du thème courant. Il sert de lecture rapide avant d’entrer dans les détails.</p>
+    </div>
+    <div class="kv-grid">
+      ${items.map(([label, value]) => `
+        <article class="kv-card">
+          <span class="kv-label">${label}</span>
+          <strong class="kv-value">${value}</strong>
+        </article>
+      `).join('')}
+    </div>
   `;
 }

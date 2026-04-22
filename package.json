@@ -4,6 +4,9 @@
   "type": "module",
   "scripts": {
     "convert:constellations": "node ./tools/convert-constellation-boundaries.js",
+    "convert:constellations:roman87": "node ./tools/convert-constellation-roman87.js",
+    "generate:constellations:synthetic": "node ./tools/generate-synthetic-constellation-boundaries.mjs",
+    "validate:constellations": "node ./tools/validate-constellations.mjs",
     "validate:precision": "node ./tools/validate-precision.mjs",
     "diagnose:moon-phase": "node ./tools/diagnose-moon-phase.mjs"
   }

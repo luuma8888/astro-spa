@@ -1,3 +1,5 @@
+import { getConstellationLabel } from './displayLabels.js';
+
 function normalizeCalculationValue(value, unit) {
   if (value === null || value === undefined || value === '') {
     return unit ? `n/a ${unit}` : 'n/a';
@@ -42,10 +44,29 @@ function formatClockWithOffset(value, utcOffsetHours = 0) {
 function formatIsoUtcText(isoString) {
   const date = new Date(isoString);
   if (Number.isNaN(date.getTime())) return 'n/a';
-  return date.toISOString().replace('.000Z', ' UTC');
+  return `${formatHumanDate(date)} UTC`;
 }
 
 function formatIsoWithOffsetText(isoString, utcOffsetHours = 0) {
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return 'n/a';
+
+  const shifted = new Date(date.getTime() + Math.round(utcOffsetHours * 60) * 60000);
+  const year = shifted.getUTCFullYear();
+  const month = String(shifted.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(shifted.getUTCDate()).padStart(2, '0');
+  const hours = String(shifted.getUTCHours()).padStart(2, '0');
+  const minutes = String(shifted.getUTCMinutes()).padStart(2, '0');
+  return formatHumanDate(new Date(Date.UTC(year, Number(month) - 1, day, hours, minutes, 0)));
+}
+
+function formatIsoUtcRawText(isoString) {
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return 'n/a';
+  return date.toISOString().replace('.000Z', ' UTC');
+}
+
+function formatIsoWithOffsetRawText(isoString, utcOffsetHours = 0) {
   const date = new Date(isoString);
   if (Number.isNaN(date.getTime())) return 'n/a';
 
@@ -61,6 +82,22 @@ function formatIsoWithOffsetText(isoString, utcOffsetHours = 0) {
   const offsetMinutesPart = String(absoluteMinutes % 60).padStart(2, '0');
 
   return `${year}-${month}-${day} ${hours}:${minutes} UTC${sign}${offsetHoursPart}:${offsetMinutesPart}`;
+}
+
+function formatHumanDate(date) {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC'
+  }).formatToParts(date);
+
+  const map = Object.fromEntries(parts.filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]));
+  const weekday = map.weekday ? map.weekday.charAt(0).toUpperCase() + map.weekday.slice(1) : '';
+  return `${weekday} ${map.day} ${map.month} ${map.year} à ${map.hour}h${map.minute}`;
 }
 
 export function createCalculationItem({
@@ -115,13 +152,15 @@ export function createCalculationCatalog(groups = []) {
 }
 
 export function createBodyPresentation(body) {
+  const constellationLabel = getConstellationLabel(body?.constellation);
   return {
     longitudeText: formatDegrees(body?.longitudeDeg),
     latitudeText: formatDegrees(body?.latitudeDeg),
     tropicalSignText: body?.tropical?.name ?? 'n/a',
     siderealSignText: body?.sidereal?.name ?? 'n/a',
     houseText: body?.house != null ? String(body.house) : 'n/a',
-    constellationText: body?.constellation?.name ?? 'n/a',
+    constellationText: constellationLabel.short,
+    constellationTitleText: constellationLabel.title,
     constellationSourceText: body?.constellation?.source ?? 'n/a'
   };
 }
@@ -132,7 +171,9 @@ function formatPhaseEvent(event, utcOffsetHours = 0) {
   return {
     labelText: event.label ?? 'n/a',
     localText: formatIsoWithOffsetText(event.utcIso, utcOffsetHours),
-    utcText: formatIsoUtcText(event.utcIso)
+    localTitleText: formatIsoWithOffsetRawText(event.utcIso, utcOffsetHours),
+    utcText: formatIsoUtcText(event.utcIso),
+    utcTitleText: formatIsoUtcRawText(event.utcIso)
   };
 }
 
@@ -161,9 +202,13 @@ function formatConstellationTransition(transition, utcOffsetHours = 0) {
 
   return {
     fromText: transition.from?.name ?? 'n/a',
-    toText: transition.to?.name ?? 'n/a',
+    fromTitleText: getConstellationLabel(transition.from).title,
+    toText: getConstellationLabel(transition.to).short,
+    toTitleText: getConstellationLabel(transition.to).title,
     localText: formatIsoWithOffsetText(transition.utcIso, utcOffsetHours),
-    utcText: formatIsoUtcText(transition.utcIso)
+    localTitleText: formatIsoWithOffsetRawText(transition.utcIso, utcOffsetHours),
+    utcText: formatIsoUtcText(transition.utcIso),
+    utcTitleText: formatIsoUtcRawText(transition.utcIso)
   };
 }
 
@@ -173,7 +218,9 @@ function formatOrbitEvent(event, utcOffsetHours = 0) {
   return {
     labelText: event.label ?? 'n/a',
     localText: formatIsoWithOffsetText(event.utcIso, utcOffsetHours),
+    localTitleText: formatIsoWithOffsetRawText(event.utcIso, utcOffsetHours),
     utcText: formatIsoUtcText(event.utcIso),
+    utcTitleText: formatIsoUtcRawText(event.utcIso),
     distanceText: Number.isFinite(event.distanceKm) ? `${Math.round(event.distanceKm).toLocaleString('fr-FR')} km` : null,
     eclipseTypeText: event.eclipseType ?? null,
     nodeDeltaText: Number.isFinite(event.nodeDeltaDeg) ? formatDegrees(event.nodeDeltaDeg, 2) : null
@@ -182,6 +229,7 @@ function formatOrbitEvent(event, utcOffsetHours = 0) {
 
 export function createMoonPhasePresentation(phase, utcOffsetHours = 0) {
   if (!phase) return null;
+  const currentConstellationLabel = getConstellationLabel(phase.currentConstellation);
 
   return {
     labelText: phase.label ?? 'n/a',
@@ -198,7 +246,8 @@ export function createMoonPhasePresentation(phase, utcOffsetHours = 0) {
     cycleLengthText: `${formatNumeric(phase.synodicCycleLengthDays ?? 29.530588853)} jours`,
     previousMajorPhaseText: formatPhaseEvent(phase.previousMajorPhase, utcOffsetHours),
     nextMajorPhaseText: formatPhaseEvent(phase.nextMajorPhase, utcOffsetHours),
-    currentConstellationText: phase.currentConstellation?.name ?? 'n/a',
+    currentConstellationText: currentConstellationLabel.short,
+    currentConstellationTitleText: currentConstellationLabel.title,
     currentConstellationSourceText: phase.currentConstellation?.source ?? 'n/a',
     nextConstellationText: formatConstellationTransition(phase.nextConstellationTransition, utcOffsetHours),
     visibilityText: phase.visibilityText ?? 'n/a',

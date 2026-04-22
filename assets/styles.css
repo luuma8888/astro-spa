@@ -1,66 +1,1148 @@
 :root {
-  color-scheme: light dark;
-  --bg: #f7f7fb;
-  --fg: #222;
-  --panel: #ffffff;
-  --border: #d9d9e3;
+  color-scheme: light;
+  --bg: #f4f1eb;
+  --bg-soft: #ece7df;
+  --surface: rgba(255, 252, 247, 0.94);
+  --surface-strong: #fffdf9;
+  --surface-muted: #f5f0e8;
+  --border: #ddd3c6;
+  --border-strong: #ccbca8;
+  --text: #26231f;
+  --text-soft: #5d564d;
+  --text-faint: #8a8176;
+  --primary: #486f72;
+  --primary-strong: #38585b;
+  --secondary: #b27f64;
+  --accent: #b69a63;
+  --success: #6e8f77;
+  --danger: #a86e61;
+  --shadow-sm: 0 1px 3px rgba(38, 35, 31, 0.06);
+  --shadow-md: 0 12px 30px rgba(38, 35, 31, 0.08);
+  --shadow-lg: 0 22px 60px rgba(38, 35, 31, 0.1);
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --sidebar-w: 270px;
+  --topbar-h: 72px;
+  --content-w: 1380px;
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-body: "Avenir Next", Avenir, "Segoe UI", "Helvetica Neue", sans-serif;
+  --transition: 0.22s ease;
+  --transition-slow: 0.4s ease;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--fg);
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(182, 154, 99, 0.12), transparent 32%),
+    radial-gradient(circle at top right, rgba(72, 111, 114, 0.1), transparent 28%),
+    linear-gradient(180deg, #f7f3ed 0%, var(--bg) 100%);
 }
 
-.app-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border);
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
-.layout {
+button,
+[role="button"],
+summary,
+label[for],
+input[type="checkbox"],
+input[type="radio"],
+select,
+.btn,
+.nav-link,
+.nav-toggle {
+  cursor: pointer;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.18;
+}
+
+p {
+  margin: 0;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.shell-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 22, 18, 0.34);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition);
+  z-index: 80;
+}
+
+.shell-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-w);
+  padding: 1.2rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: rgba(255, 251, 245, 0.78);
+  border-right: 1px solid rgba(204, 188, 168, 0.7);
+  backdrop-filter: blur(24px);
+  z-index: 100;
+}
+
+.sidebar-brand {
+  padding: 0.55rem 0.5rem 1rem;
+  border-bottom: 1px solid rgba(204, 188, 168, 0.55);
+}
+
+.brand-mark {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  color: var(--primary-strong);
+  letter-spacing: 0.02em;
+}
+
+.brand-subtitle {
+  margin-top: 0.35rem;
+  color: var(--text-faint);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.nav-link {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.8rem 0.95rem;
+  text-align: left;
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.nav-link:hover {
+  background: rgba(72, 111, 114, 0.09);
+  color: var(--primary-strong);
+  transform: translateX(2px);
+}
+
+.nav-link.is-active {
+  background: linear-gradient(135deg, rgba(72, 111, 114, 0.16), rgba(178, 127, 100, 0.1));
+  color: var(--primary-strong);
+  box-shadow: inset 0 0 0 1px rgba(72, 111, 114, 0.15);
+}
+
+.sidebar-note {
+  margin-top: auto;
+  padding: 0.95rem 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(245, 240, 232, 0.92);
+  border: 1px solid rgba(204, 188, 168, 0.6);
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+.shell-main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+}
+
+.shell-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 70;
+  min-height: var(--topbar-h);
+  padding: 0.9rem 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  background: rgba(244, 241, 235, 0.78);
+  border-bottom: 1px solid rgba(204, 188, 168, 0.55);
+  backdrop-filter: blur(18px);
+}
+
+.nav-toggle {
+  display: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 252, 247, 0.92);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.topbar-copy {
+  min-width: 0;
+}
+
+.topbar-eyebrow,
+.section-kicker {
+  color: var(--text-faint);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.topbar-title {
+  margin-top: 0.12rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--primary-strong);
+}
+
+.topbar-meta {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 252, 247, 0.92);
+  border: 1px solid rgba(204, 188, 168, 0.7);
+  color: var(--text-soft);
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dashboard {
+  width: min(var(--content-w), calc(100% - 2.5rem));
+  margin: 0 auto;
+  padding: 1.4rem 0 3.5rem;
+}
+
+.dashboard-section {
+  scroll-margin-top: calc(var(--topbar-h) + 1rem);
+  margin-bottom: 2rem;
+}
+
+.section-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+  gap: 1rem 1.5rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.section-heading h2 {
+  margin-top: 0.35rem;
+  font-size: clamp(1.65rem, 2vw, 2rem);
+}
+
+.section-intro {
+  color: var(--text-soft);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.hero-card,
+.panel,
+.panel-disclosure > summary {
+  background: var(--surface);
+  border: 1px solid rgba(204, 188, 168, 0.72);
+  box-shadow: var(--shadow-md);
+}
+
+.hero-card {
+  border-radius: var(--radius-lg);
+  padding: 1.7rem;
+}
+
+.hero-copy h1 {
+  margin-top: 0.45rem;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  max-width: 12ch;
+}
+
+.hero-lead {
+  margin-top: 1rem;
+  max-width: 68ch;
+  color: var(--text-soft);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.hero-grid {
+  margin-top: 1.4rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.hero-stat {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: rgba(245, 240, 232, 0.82);
+  border: 1px solid rgba(204, 188, 168, 0.55);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.hero-stat-label {
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero-stat strong {
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.hero-stat-sub {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.hero-status strong {
+  color: var(--primary-strong);
+}
+
+.workspace-grid,
+.overview-grid,
+.sky-grid,
+.lunar-grid {
   display: grid;
   gap: 1rem;
-  padding: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.workspace-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.overview-grid {
+  grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.4fr);
+  grid-template-areas:
+    "summary synthesis"
+    "clarifications synthesis";
+  align-items: start;
+}
+
+.sky-grid {
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+  grid-template-areas:
+    "wheel bodies"
+    "houses aspects";
+}
+
+.lunar-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+  grid-template-areas:
+    "moon-phase moon-phase"
+    "rise-set moon-diagnostics";
 }
 
 .panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: var(--radius-lg);
+  padding: 1.2rem;
 }
 
-form {
+.panel-featured {
+  background: linear-gradient(180deg, rgba(255, 253, 249, 0.98) 0%, rgba(248, 244, 238, 0.96) 100%);
+}
+
+.panel-summary {
+  grid-area: summary;
+}
+
+.panel-synthesis {
+  grid-area: synthesis;
+}
+
+.panel-clarifications {
+  grid-area: clarifications;
+}
+
+.panel-sky-wheel {
+  grid-area: wheel;
+}
+
+.panel-bodies {
+  grid-area: bodies;
+}
+
+.panel-houses {
+  grid-area: houses;
+}
+
+.panel-aspects {
+  grid-area: aspects;
+}
+
+.panel-moon-phase {
+  grid-area: moon-phase;
+}
+
+.panel-rise-set {
+  grid-area: rise-set;
+}
+
+.panel-moon-diagnostics {
+  grid-area: moon-diagnostics;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.panel-heading h3 {
+  font-size: 1.3rem;
+}
+
+.panel-heading p {
+  margin-top: 0.3rem;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.split-heading {
+  align-items: center;
+}
+
+.wheel-frame {
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(72, 111, 114, 0.06), rgba(182, 154, 99, 0.06));
+  border: 1px solid rgba(204, 188, 168, 0.55);
+  display: flex;
+  justify-content: center;
+}
+
+.advanced-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.panel-disclosure {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.panel-disclosure > summary {
+  list-style: none;
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.2rem;
+  cursor: pointer;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.panel-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel-disclosure > summary span {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+}
+
+.panel-disclosure > summary small {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+.disclosure-body {
+  margin-top: 0.75rem;
+}
+
+.stack-form,
+.content-stack,
+#summary,
+#clarifications,
+#calculation-groups,
+#houses,
+#aspects,
+#moon-phase,
+#moon-diagnostics,
+#rise-set,
+#transits,
+#symbolic {
   display: grid;
   gap: 0.75rem;
+}
+
+.form-assistant {
+  padding: 1rem;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(245, 240, 232, 0.88), rgba(255, 252, 247, 0.9));
+  border: 1px solid rgba(204, 188, 168, 0.58);
+}
+
+.form-assistant-head {
+  display: grid;
+  gap: 0.28rem;
+  margin-bottom: 0.85rem;
+}
+
+.form-assistant-head h4 {
+  font-size: 1rem;
+  color: var(--primary-strong);
+}
+
+.form-assistant-head p {
+  color: var(--text-soft);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.field-help {
+  display: block;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.inline-help {
+  margin-top: 0.35rem;
+}
+
+.compact-row .btn {
+  width: auto;
+}
+
+.content-stack {
+  align-content: start;
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.form-grid.two-cols {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.full-span {
+  grid-column: 1 / -1;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-soft);
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+input[type="date"],
+input[type="time"],
+input[type="number"],
+input[type="text"],
+select,
+textarea {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 253, 249, 0.96);
+  color: var(--text);
+  padding: 0.82rem 0.9rem;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(72, 111, 114, 0.7);
+  box-shadow: 0 0 0 4px rgba(72, 111, 114, 0.1);
+  background: #fffefb;
+}
+
+.inline-control {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  min-width: 170px;
 }
 
 .button-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
-label {
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.9rem;
+  padding: 0.72rem 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: 0.86rem;
+  transition: transform var(--transition), background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary {
+  background: rgba(255, 252, 247, 0.96);
+  color: var(--text);
+  border-color: rgba(204, 188, 168, 0.8);
+}
+
+.check-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.check-row {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.78rem 0.9rem;
+  background: rgba(245, 240, 232, 0.7);
+  border: 1px solid rgba(204, 188, 168, 0.55);
+  border-radius: 14px;
+  font-weight: 600;
+}
+
+input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+}
+
+#chart-wheel {
+  width: min(100%, 560px);
+  height: auto;
+  display: block;
+}
+
+.compact-copy p,
+.prose-copy p,
+#summary p,
+#clarifications p,
+#calculation-groups p,
+#houses p,
+#aspects p,
+#moon-phase p,
+#moon-diagnostics p,
+#rise-set p,
+#transits p,
+#symbolic p {
+  padding: 0.82rem 0.92rem;
+  border-radius: 14px;
+  background: rgba(245, 240, 232, 0.72);
+  border: 1px solid rgba(204, 188, 168, 0.5);
+  line-height: 1.7;
+}
+
+#summary .kv-grid,
+#symbolic .kv-grid,
+#transits .transit-stats-grid {
+  margin-top: 0;
+}
+
+.prose-copy p,
+#moon-phase p,
+#transits p {
+  background: rgba(255, 252, 247, 0.88);
+}
+
+#summary p strong,
+#clarifications p strong,
+#aspects p strong,
+#moon-phase p strong,
+#moon-diagnostics p strong,
+#rise-set p strong,
+#transits p strong,
+#calculation-groups p strong {
+  color: var(--primary-strong);
+}
+
+#clarifications h3,
+#calculation-groups h3,
+#synthesis h3,
+#moon-diagnostics h3,
+#transits h3 {
+  margin-top: 0.4rem;
+  padding-top: 0.25rem;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+#bodies {
+  display: grid;
+  gap: 0.9rem;
+}
+
+#bodies > p:first-child {
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(245, 240, 232, 0.72);
+  border: 1px solid rgba(204, 188, 168, 0.5);
+}
+
+#bodies > div {
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(255, 253, 249, 0.92);
+  border: 1px solid rgba(204, 188, 168, 0.6);
+  box-shadow: var(--shadow-sm);
+}
+
+.panel-bodies #bodies {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+#bodies > div h3 {
+  margin-bottom: 0.7rem;
+  font-size: 1.08rem;
+  color: var(--primary-strong);
+}
+
+#bodies > div p {
+  margin-top: 0.45rem;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+
+#synthesis .synthesis-section,
+.calc-group,
+.moon-diagnostic-block {
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(255, 252, 247, 0.92);
+  border: 1px solid rgba(204, 188, 168, 0.55);
+}
+
+#synthesis .synthesis-section h3,
+.calc-group h3,
+.moon-diagnostic-block h3 {
+  margin-bottom: 0.75rem;
+  font-size: 1.02rem;
+  color: var(--primary-strong);
+}
+
+.moon-diagnostic-block {
+  margin-top: 0;
+  padding-top: 1rem;
+}
+
+.muted-note {
+  color: var(--text-faint);
+  font-size: 0.92em;
+}
+
+.section-block {
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(245, 240, 232, 0.72);
+  border: 1px solid rgba(204, 188, 168, 0.5);
+}
+
+.section-block-intro p {
+  color: var(--text-soft);
+  line-height: 1.75;
+}
+
+.kv-grid,
+.info-grid,
+.transit-stats-grid,
+.house-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.kv-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.info-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.house-grid {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+
+.kv-card,
+.info-card,
+.house-chip {
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  background: rgba(255, 252, 247, 0.9);
+  border: 1px solid rgba(204, 188, 168, 0.58);
+  box-shadow: var(--shadow-sm);
+}
+
+.kv-card {
   display: grid;
   gap: 0.25rem;
 }
 
-.inline-control {
-  margin-bottom: 0.75rem;
+.kv-label,
+.body-label,
+.house-label {
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-button {
-  padding: 0.75rem 1rem;
-  cursor: pointer;
+.kv-value,
+.house-chip strong {
+  font-size: 1rem;
+  color: var(--text);
 }
 
-#app-status {
-  margin-top: 0.75rem;
+.info-card h3 {
+  margin-bottom: 0.7rem;
+  font-size: 1rem;
+  color: var(--primary-strong);
+}
+
+.bullet-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.bullet-list p {
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.body-card {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.body-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.7rem;
+}
+
+.body-meta-grid div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.body-meta-grid strong {
   font-size: 0.95rem;
-  opacity: 0.85;
+  color: var(--text);
+}
+
+.body-source {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+}
+
+.aspect-list,
+.transit-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.aspect-item,
+.transit-item {
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: rgba(255, 252, 247, 0.9);
+  border: 1px solid rgba(204, 188, 168, 0.58);
+}
+
+.aspect-main,
+.transit-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.aspect-meta,
+.transit-meta {
+  margin-top: 0.45rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+}
+
+.transit-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: rgba(72, 111, 114, 0.12);
+  color: var(--primary-strong);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.transit-layout {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.transit-stats-grid {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+
+.moon-phase-layout,
+.moon-phase-grid,
+.moon-metric-grid,
+.moon-dual-grid,
+.transit-density-grid,
+.transit-compact-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.moon-phase-layout {
+  gap: 1rem;
+}
+
+.moon-hero-card,
+.moon-panel,
+.moon-metric-card,
+.moon-mini-card,
+.transit-compact {
+  border-radius: 18px;
+  border: 1px solid rgba(204, 188, 168, 0.58);
+  background: rgba(255, 252, 247, 0.92);
+  box-shadow: var(--shadow-sm);
+}
+
+.moon-hero-card,
+.moon-panel {
+  padding: 1rem 1.05rem;
+}
+
+.moon-hero-card h3,
+.moon-panel h3 {
+  color: var(--primary-strong);
+}
+
+.moon-hero-card h3 {
+  margin-top: 0.28rem;
+  font-size: 1.55rem;
+}
+
+.moon-hero-copy {
+  margin-top: 0.55rem;
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.moon-metric-grid {
+  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.moon-metric-card {
+  padding: 0.85rem 0.9rem;
+  display: grid;
+  gap: 0.18rem;
+}
+
+.moon-metric-card.is-highlight {
+  background: linear-gradient(135deg, rgba(72, 111, 114, 0.12), rgba(182, 154, 99, 0.12));
+}
+
+.moon-metric-label,
+.moon-mini-label,
+.moon-event-label {
+  color: var(--text-faint);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.moon-metric-value {
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.moon-phase-grid,
+.transit-density-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.moon-key-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+}
+
+.moon-key-list p {
+  margin: 0;
+  padding: 0.72rem 0.8rem !important;
+  display: grid;
+  gap: 0.22rem;
+  background: rgba(245, 240, 232, 0.68) !important;
+}
+
+.moon-key-list p span {
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.moon-dual-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.8rem;
+}
+
+.moon-mini-card {
+  padding: 0.8rem 0.85rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.moon-mini-card strong,
+.moon-event-row strong {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.moon-mini-meta,
+.moon-event-meta {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.moon-panel-events {
+  align-self: stretch;
+}
+
+.moon-event-list {
+  margin-top: 0.8rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.moon-event-row {
+  padding: 0.82rem 0.9rem;
+  display: grid;
+  gap: 0.22rem;
+  border-radius: 14px;
+  background: rgba(245, 240, 232, 0.68);
+  border: 1px solid rgba(204, 188, 168, 0.45);
+}
+
+.transit-density-grid {
+  gap: 0.9rem;
+}
+
+.transit-compact-panel .transit-compact-list p {
+  padding: 0.82rem 0.92rem;
+}
+
+.transit-compact-list {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.transit-compact {
+  padding: 0.78rem 0.85rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2rem 0.65rem;
+  align-items: start;
+}
+
+.transit-compact .transit-badge {
+  grid-row: 1 / span 2;
+  margin-top: 0.1rem;
+}
+
+.transit-compact-main,
+.transit-compact-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.45rem;
+}
+
+.transit-compact-meta {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.transit-très-fort {
+  border-color: rgba(178, 127, 100, 0.7);
+  background: linear-gradient(180deg, rgba(255, 248, 244, 0.96), rgba(255, 252, 247, 0.92));
+}
+
+.transit-fort {
+  border-color: rgba(182, 154, 99, 0.7);
 }
 
 pre {
@@ -68,83 +1150,140 @@ pre {
   word-break: break-word;
 }
 
-canvas {
-  width: 100%;
-  max-width: 520px;
-  height: auto;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+@media (max-width: 1240px) {
+  .overview-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "summary"
+      "synthesis"
+      "clarifications";
+  }
+
+  .sky-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "wheel"
+      "bodies"
+      "aspects"
+      "houses";
+  }
+
+  .lunar-grid,
+  .info-grid,
+  .moon-phase-grid,
+  .transit-density-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "moon-phase"
+      "rise-set"
+      "moon-diagnostics";
+  }
 }
 
-#transits p {
-  margin: 0.35rem 0;
+@media (max-width: 980px) {
+  .workspace-grid,
+  .hero-grid,
+  .section-heading,
+  .kv-grid,
+  .transit-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard {
+    width: min(calc(100% - 1.5rem), var(--content-w));
+  }
 }
 
-#synthesis h3 {
-  margin: 1rem 0 0.5rem;
-  font-size: 1rem;
+@media (max-width: 860px) {
+  .shell-sidebar {
+    transform: translateX(-100%);
+    transition: transform var(--transition-slow);
+  }
+
+  body.sidebar-open .shell-sidebar {
+    transform: translateX(0);
+  }
+
+  body.sidebar-open .shell-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .shell-main {
+    margin-left: 0;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
 }
 
-#synthesis .synthesis-section:first-child h3 {
-  margin-top: 0;
+@media (max-width: 720px) {
+  .shell-topbar {
+    padding-inline: 1rem;
+  }
+
+  .topbar-meta {
+    display: none;
+  }
+
+  .dashboard {
+    width: min(calc(100% - 1rem), var(--content-w));
+    padding-top: 1rem;
+  }
+
+  .hero-card,
+  .panel,
+  .panel-disclosure > summary {
+    border-radius: 20px;
+  }
+
+  .hero-copy h1 {
+    max-width: none;
+  }
+
+  .form-grid.two-cols {
+    grid-template-columns: 1fr;
+  }
+
+  .body-meta-grid,
+  .house-grid,
+  .moon-dual-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .panel-bodies #bodies,
+  .kv-grid,
+  .transit-stats-grid,
+  .moon-metric-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .button-row {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
 }
 
-#synthesis p {
-  margin: 0.35rem 0;
-}
+@media (max-width: 520px) {
+  .body-meta-grid,
+  .house-grid,
+  .panel-bodies #bodies,
+  .kv-grid,
+  .transit-stats-grid,
+  .moon-metric-grid,
+  .moon-dual-grid {
+    grid-template-columns: 1fr;
+  }
 
-#clarifications h3 {
-  margin: 1rem 0 0.5rem;
-  font-size: 1rem;
-}
-
-#clarifications h3:first-child {
-  margin-top: 0;
-}
-
-#clarifications p {
-  margin: 0.35rem 0;
-}
-
-#moon-diagnostics h3 {
-  margin: 1rem 0 0.5rem;
-  font-size: 1rem;
-}
-
-#moon-diagnostics h3:first-child {
-  margin-top: 0;
-}
-
-#moon-diagnostics p {
-  margin: 0.35rem 0;
-}
-
-.moon-diagnostic-block {
-  padding-top: 0.25rem;
-  border-top: 1px solid var(--border);
-  margin-top: 0.75rem;
-}
-
-.moon-diagnostic-block:first-of-type {
-  border-top: 0;
-  margin-top: 0;
-  padding-top: 0;
-}
-
-.calc-group h3 {
-  margin: 1rem 0 0.5rem;
-  font-size: 1rem;
-}
-
-.calc-group:first-child h3 {
-  margin-top: 0;
-}
-
-.calc-group p {
-  margin: 0.35rem 0;
-}
-
-.muted-note {
-  opacity: 0.75;
-  font-size: 0.92em;
+  .aspect-main,
+  .transit-main,
+  .aspect-meta,
+  .transit-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

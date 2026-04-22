@@ -8,144 +8,459 @@
 </head>
 <body>
   <div id="app">
-    <header class="app-header">
-      <h1>Astro App</h1>
-      <p>Astronomie réelle, astrologie, Soleil, Lune, Y-King</p>
-    </header>
+    <div id="shell-backdrop" class="shell-backdrop"></div>
 
-    <main class="layout">
-      <section class="panel">
-        <h2>Carte de référence</h2>
-        <form id="chart-form">
-          <label>Date <input type="date" name="date" required /></label>
-          <label>Heure <input type="time" name="time" step="1" required /></label>
-          <label>Latitude <input type="number" name="latitude" step="0.000001" required /></label>
-          <label>Longitude <input type="number" name="longitude" step="0.000001" required /></label>
-          <label>UTC offset <input type="number" name="utcOffset" step="0.5" value="0" required /></label>
-          <label>
-            Système de maisons
-            <select name="houseSystem">
-              <option value="porphyry" selected>Porphyry</option>
-              <option value="equal">Maisons égales</option>
-              <option value="whole-sign">Whole Sign</option>
-            </select>
-          </label>
-          <label>
-            Ayanamsa
-            <select name="ayanamsa">
-              <option value="lahiri" selected>Lahiri</option>
-              <option value="faganBradley">Fagan-Bradley</option>
-              <option value="krishnamurti">Krishnamurti</option>
-            </select>
-          </label>
-          <div class="button-row">
-            <button type="submit">Calculer</button>
-            <button type="button" id="save-chart">Sauvegarder</button>
-            <button type="button" id="load-chart">Charger</button>
-            <button type="button" id="export-chart">Exporter JSON</button>
-            <button type="button" id="import-chart-button">Importer JSON</button>
-            <input type="file" id="import-chart-file" accept="application/json" hidden />
+    <aside id="shell-sidebar" class="shell-sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark">Astro App</div>
+        <div class="brand-subtitle">Astronomie, astrologie, cycles et lecture symbolique</div>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Navigation principale">
+        <button type="button" class="nav-link is-active" data-nav-target="hero-section">Vue d'ensemble</button>
+        <button type="button" class="nav-link" data-nav-target="workspace-section">Pilotage</button>
+        <button type="button" class="nav-link" data-nav-target="interpretation-section">Lecture</button>
+        <button type="button" class="nav-link" data-nav-target="sky-section">Carte</button>
+        <button type="button" class="nav-link" data-nav-target="lunar-section">Lunaire</button>
+        <button type="button" class="nav-link" data-nav-target="transits-section">Transits</button>
+        <button type="button" class="nav-link" data-nav-target="advanced-section">Technique</button>
+      </nav>
+
+      <div class="sidebar-note">
+        <p>Direction visuelle: dashboard sobre, lecture longue durée, hiérarchie claire, responsive réel.</p>
+      </div>
+    </aside>
+
+    <div class="shell-main">
+      <header class="shell-topbar">
+        <button type="button" id="shell-nav-toggle" class="nav-toggle" aria-label="Ouvrir le menu">☰</button>
+        <div class="topbar-copy">
+          <div class="topbar-eyebrow">Tableau de bord</div>
+          <div id="current-view-label" class="topbar-title">Vue d'ensemble</div>
+        </div>
+        <div class="topbar-meta">
+          <span class="meta-chip">offline</span>
+          <span class="meta-chip">local-first</span>
+          <span class="meta-chip">spa</span>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section id="hero-section" class="dashboard-section hero-section" data-section-label="Vue d'ensemble">
+          <div class="hero-card">
+            <div class="hero-copy">
+              <div class="section-kicker">Consultation</div>
+              <h1>Lire le thème sans se perdre dans les blocs</h1>
+              <p class="hero-lead">Cette interface doit permettre une lecture rapide d'abord, puis une exploration détaillée. Les calculs restent riches, mais l'affichage doit devenir hiérarchisé, compact et consultable sur desktop comme sur mobile.</p>
+            </div>
+
+            <div class="hero-grid">
+              <div class="hero-stat">
+                <span class="hero-stat-label">Moteur</span>
+                <strong>Calculs avancés</strong>
+                <span class="hero-stat-sub">natal, transits, lunaire, symbolique</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-label">Constellations</span>
+                <strong>Roman87 exact</strong>
+                <span class="hero-stat-sub">précession B1875 prioritaire</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-label">Mode de lecture</span>
+                <strong>dashboard</strong>
+                <span class="hero-stat-sub">résumé, analyse, détail</span>
+              </div>
+              <div class="hero-stat hero-status">
+                <span class="hero-stat-label">État local</span>
+                <strong id="app-status">Initialisation...</strong>
+                <span class="hero-stat-sub">stockage, brouillons, carte courante</span>
+              </div>
+            </div>
           </div>
-        </form>
-        <p id="app-status">Initialisation...</p>
-      </section>
+        </section>
 
-      <section class="panel">
-        <h2>Résumé</h2>
-        <div id="summary"></div>
-      </section>
+        <section id="workspace-section" class="dashboard-section" data-section-label="Pilotage">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker">Pilotage</div>
+              <h2>Paramétrer la carte et la comparaison</h2>
+            </div>
+            <p class="section-intro">Les formulaires deviennent des panneaux de contrôle, séparés du reste de la lecture pour éviter d'écraser les résultats.</p>
+          </div>
 
-      <section class="panel">
-        <h2>Clés de lecture</h2>
-        <div id="clarifications"></div>
-      </section>
+          <div class="workspace-grid">
+            <section class="panel panel-control">
+              <div class="panel-heading">
+                <div>
+                  <h3>Carte de référence</h3>
+                  <p>Base de calcul du thème natal ou de la carte active.</p>
+                </div>
+              </div>
 
-      <section class="panel">
-        <h2>Familles de calcul</h2>
-        <div id="calculation-groups"></div>
-      </section>
+              <form id="chart-form" class="stack-form">
+                <div class="form-assistant">
+                  <div class="form-assistant-head">
+                    <h4>Assistant de configuration</h4>
+                    <p>Choisis d’abord l’objectif de lecture, puis ajuste si besoin.</p>
+                  </div>
+                  <div class="form-grid two-cols">
+                    <label>
+                      Je veux surtout
+                      <select name="profilePreset">
+                        <option value="western" selected>Un thème astral occidental</option>
+                        <option value="vedic">Un thème védique / sidéral</option>
+                        <option value="human-design">Des repères utiles pour design humain</option>
+                        <option value="astronomy">Des données surtout astronomiques</option>
+                      </select>
+                    </label>
+                    <div id="chart-profile-help" class="field-help"></div>
+                  </div>
+                </div>
 
-      <section class="panel">
-        <h2>Corps célestes</h2>
-        <div id="bodies"></div>
-      </section>
+                <div class="form-grid two-cols">
+                  <label class="full-span">
+                    Ville rapide
+                    <select name="cityPreset">
+                      <option value="">Choisir une ville pour préremplir</option>
+                      <option value="paris">Paris</option>
+                      <option value="lyon">Lyon</option>
+                      <option value="marseille">Marseille</option>
+                      <option value="bruxelles">Bruxelles</option>
+                      <option value="geneve">Genève</option>
+                      <option value="montreal">Montréal</option>
+                      <option value="new-york">New York</option>
+                      <option value="londres">Londres</option>
+                      <option value="tokyo">Tokyo</option>
+                    </select>
+                  </label>
+                </div>
 
-      <section class="panel">
-        <h2>Maisons</h2>
-        <div id="houses"></div>
-      </section>
+                <div class="form-grid two-cols">
+                  <label>Date <input type="date" name="date" required /></label>
+                  <label>Heure <input type="time" name="time" step="1" required /></label>
+                  <label>Latitude <input type="number" name="latitude" step="0.000001" required /></label>
+                  <label>Longitude <input type="number" name="longitude" step="0.000001" required /></label>
+                  <label>
+                    Fuseau horaire
+                    <select name="timeZone" required></select>
+                    <small id="chart-timezone-help" class="field-help inline-help">Le fuseau sert à calculer automatiquement l’UTC exact pour la date choisie.</small>
+                  </label>
+                  <label>
+                    UTC calculé
+                    <select name="utcOffset" required></select>
+                    <small id="chart-utc-help" class="field-help inline-help">Mis à jour automatiquement selon la ville, le fuseau et la date.</small>
+                  </label>
+                  <label>
+                    Système de maisons
+                    <select name="houseSystem">
+                      <option value="porphyry" selected>Porphyry</option>
+                      <option value="equal">Maisons égales</option>
+                      <option value="whole-sign">Whole Sign</option>
+                    </select>
+                    <small id="chart-house-help" class="field-help inline-help"></small>
+                  </label>
+                  <label class="full-span">
+                    Ayanamsa
+                    <select name="ayanamsa">
+                      <option value="lahiri" selected>Lahiri</option>
+                      <option value="faganBradley">Fagan-Bradley</option>
+                      <option value="krishnamurti">Krishnamurti</option>
+                    </select>
+                    <small id="chart-ayanamsa-help" class="field-help inline-help"></small>
+                  </label>
+                </div>
 
-      <section class="panel">
-        <h2>Symbolique</h2>
-        <div id="symbolic"></div>
-      </section>
+                <div class="button-row">
+                  <button type="submit" class="btn btn-primary">Calculer</button>
+                  <button type="button" id="save-chart" class="btn btn-secondary">Sauvegarder</button>
+                  <button type="button" id="load-chart" class="btn btn-secondary">Charger</button>
+                  <button type="button" id="export-chart" class="btn btn-secondary">Exporter JSON</button>
+                  <button type="button" id="import-chart-button" class="btn btn-secondary">Importer JSON</button>
+                  <input type="file" id="import-chart-file" accept="application/json" hidden />
+                </div>
+              </form>
+            </section>
 
-      <section class="panel">
-        <h2>Synthèse automatique</h2>
-        <label class="inline-control">
-          Niveau de lecture
-          <select id="synthesis-level">
-            <option value="short">Courte</option>
-            <option value="medium" selected>Moyenne</option>
-            <option value="long">Longue</option>
-          </select>
-        </label>
-        <div id="synthesis"></div>
-      </section>
+            <section class="panel panel-control">
+              <div class="panel-heading">
+                <div>
+                  <h3>Transits / comparaison</h3>
+                  <p>Comparer la carte de référence à une date et un lieu de transit.</p>
+                </div>
+              </div>
 
-      <section class="panel">
-        <h2>Aspects</h2>
-        <div id="aspects"></div>
-      </section>
+              <form id="transit-form" class="stack-form">
+                <div class="form-assistant">
+                  <div class="form-assistant-head">
+                    <h4>Aide transit</h4>
+                    <p>Tu peux repartir du même lieu que la carte, ou préremplir une grande ville.</p>
+                  </div>
+                  <div class="button-row compact-row">
+                    <button type="button" id="copy-chart-location" class="btn btn-secondary">Reprendre le lieu de la carte</button>
+                  </div>
+                </div>
 
-      <section class="panel">
-        <h2>Phase lunaire</h2>
-        <div id="moon-phase"></div>
-      </section>
+                <div class="form-grid two-cols">
+                  <label class="full-span">
+                    Ville rapide
+                    <select name="cityPreset">
+                      <option value="">Choisir une ville pour préremplir</option>
+                      <option value="paris">Paris</option>
+                      <option value="lyon">Lyon</option>
+                      <option value="marseille">Marseille</option>
+                      <option value="bruxelles">Bruxelles</option>
+                      <option value="geneve">Genève</option>
+                      <option value="montreal">Montréal</option>
+                      <option value="new-york">New York</option>
+                      <option value="londres">Londres</option>
+                      <option value="tokyo">Tokyo</option>
+                    </select>
+                  </label>
+                </div>
 
-      <section class="panel">
-        <h2>Diagnostic lunaire</h2>
-        <div id="moon-diagnostics"></div>
-      </section>
+                <div class="form-grid two-cols">
+                  <label>Date transit <input type="date" name="date" required /></label>
+                  <label>Heure transit <input type="time" name="time" step="1" required /></label>
+                  <label>Latitude <input type="number" name="latitude" step="0.000001" required /></label>
+                  <label>Longitude <input type="number" name="longitude" step="0.000001" required /></label>
+                  <label>
+                    Fuseau horaire
+                    <select name="timeZone" required></select>
+                    <small id="transit-timezone-help" class="field-help inline-help">Si le lieu ne change pas, garde le même fuseau. L’UTC sera recalculé pour la date du transit.</small>
+                  </label>
+                  <label>
+                    UTC calculé
+                    <select name="utcOffset" required></select>
+                    <small id="transit-utc-help" class="field-help inline-help">Mis à jour automatiquement selon le fuseau et la date du transit.</small>
+                  </label>
+                  <label>
+                    Orbe max
+                    <select name="maxOrb">
+                      <option value="2">2°</option>
+                      <option value="3">3°</option>
+                      <option value="4" selected>4°</option>
+                      <option value="5">5°</option>
+                      <option value="6">6°</option>
+                    </select>
+                    <small class="field-help inline-help">2° à 3° pour du très serré, 4° pour un bon compromis, 5° à 6° pour une lecture plus large.</small>
+                  </label>
+                </div>
 
-      <section class="panel">
-        <h2>Lever / Coucher</h2>
-        <div id="rise-set"></div>
-      </section>
+                <div class="check-grid">
+                  <label class="check-row"><input type="checkbox" name="includeFast" checked /> Inclure les transits rapides</label>
+                  <label class="check-row"><input type="checkbox" name="includeAngles" checked /> Inclure Asc / MC</label>
+                  <label class="check-row"><input type="checkbox" name="includeMinorImportance" /> Inclure aussi les transits légers</label>
+                </div>
 
-      <section class="panel">
-        <h2>Carte du ciel</h2>
-        <canvas id="chart-wheel" width="520" height="520"></canvas>
-      </section>
+                <div class="button-row">
+                  <button type="submit" class="btn btn-primary">Comparer</button>
+                </div>
+              </form>
+            </section>
+          </div>
+        </section>
 
-      <section class="panel">
-        <h2>Transits / Comparaison</h2>
-        <form id="transit-form">
-          <label>Date transit <input type="date" name="date" required /></label>
-          <label>Heure transit <input type="time" name="time" step="1" required /></label>
-          <label>Latitude <input type="number" name="latitude" step="0.000001" required /></label>
-          <label>Longitude <input type="number" name="longitude" step="0.000001" required /></label>
-          <label>UTC offset <input type="number" name="utcOffset" step="0.5" value="0" required /></label>
-          <label>
-            Orbe max
-            <select name="maxOrb">
-              <option value="2">2°</option>
-              <option value="3">3°</option>
-              <option value="4" selected>4°</option>
-              <option value="5">5°</option>
-              <option value="6">6°</option>
-            </select>
-          </label>
-          <label><input type="checkbox" name="includeFast" checked /> Inclure les transits rapides</label>
-          <label><input type="checkbox" name="includeAngles" checked /> Inclure Asc / MC</label>
-          <label><input type="checkbox" name="includeMinorImportance" /> Inclure aussi les transits légers</label>
-          <button type="submit">Comparer</button>
-        </form>
-        <div id="transits"></div>
-      </section>
-    </main>
+        <section id="interpretation-section" class="dashboard-section" data-section-label="Lecture">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker">Lecture</div>
+              <h2>Résumé, synthèse et repères de compréhension</h2>
+            </div>
+            <p class="section-intro">Les éléments à lire en premier doivent être regroupés en tête, avec un niveau de détail progressif.</p>
+          </div>
+
+          <div class="overview-grid">
+            <section class="panel panel-summary">
+              <div class="panel-heading">
+                <div>
+                  <h3>Résumé</h3>
+                  <p>Repères techniques les plus utiles à la carte courante.</p>
+                </div>
+              </div>
+              <div id="summary" class="content-stack compact-copy"></div>
+            </section>
+
+            <section class="panel panel-featured panel-synthesis">
+              <div class="panel-heading split-heading">
+                <div>
+                  <h3>Synthèse automatique</h3>
+                  <p>Niveau de lecture progressif du thème.</p>
+                </div>
+                <label class="inline-control">
+                  Niveau de lecture
+                  <select id="synthesis-level">
+                    <option value="short">Courte</option>
+                    <option value="medium" selected>Moyenne</option>
+                    <option value="long">Longue</option>
+                  </select>
+                </label>
+              </div>
+              <div id="synthesis" class="content-stack prose-copy"></div>
+            </section>
+
+            <section class="panel panel-clarifications">
+              <div class="panel-heading">
+                <div>
+                  <h3>Clés de lecture</h3>
+                  <p>Ce que mesurent réellement les blocs calculés.</p>
+                </div>
+              </div>
+              <div id="clarifications" class="content-stack compact-copy"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="sky-section" class="dashboard-section" data-section-label="Carte">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker">Carte</div>
+              <h2>Structure du thème et géométrie céleste</h2>
+            </div>
+            <p class="section-intro">Le cœur de consultation visuelle: roue, corps, maisons et aspects doivent être lisibles sans mur de texte.</p>
+          </div>
+
+          <div class="sky-grid">
+            <section class="panel panel-wheel panel-sky-wheel">
+              <div class="panel-heading">
+                <div>
+                  <h3>Carte du ciel</h3>
+                  <p>Vue synthétique de la distribution des points du thème.</p>
+                </div>
+              </div>
+              <div class="wheel-frame">
+                <canvas id="chart-wheel" width="520" height="520"></canvas>
+              </div>
+            </section>
+
+            <section class="panel panel-bodies">
+              <div class="panel-heading">
+                <div>
+                  <h3>Corps célestes</h3>
+                  <p>Placements principaux, signes, maisons et constellations.</p>
+                </div>
+              </div>
+              <div id="bodies" class="content-stack dense-copy bodies-grid"></div>
+            </section>
+
+            <section class="panel panel-houses">
+              <div class="panel-heading">
+                <div>
+                  <h3>Maisons</h3>
+                  <p>Découpage spatial du thème dans le système choisi.</p>
+                </div>
+              </div>
+              <div id="houses" class="content-stack compact-copy"></div>
+            </section>
+
+            <section class="panel panel-aspects">
+              <div class="panel-heading">
+                <div>
+                  <h3>Aspects</h3>
+                  <p>Relations géométriques dominantes du thème.</p>
+                </div>
+              </div>
+              <div id="aspects" class="content-stack compact-copy"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="lunar-section" class="dashboard-section" data-section-label="Lunaire">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker">Lunaire</div>
+              <h2>Phase, diagnostics et présence au ciel</h2>
+            </div>
+            <p class="section-intro">Regrouper tout ce qui concerne la Lune dans une zone dédiée, plus facile à explorer et à comparer.</p>
+          </div>
+
+          <div class="lunar-grid">
+            <section class="panel panel-featured panel-moon-phase">
+              <div class="panel-heading">
+                <div>
+                  <h3>Phase lunaire</h3>
+                  <p>Cycle, illumination, constellation et événements orbitaux.</p>
+                </div>
+              </div>
+              <div id="moon-phase" class="content-stack prose-copy"></div>
+            </section>
+
+            <section class="panel panel-rise-set">
+              <div class="panel-heading">
+                <div>
+                  <h3>Lever / Coucher</h3>
+                  <p>Présence locale du Soleil et de la Lune sur l'horizon.</p>
+                </div>
+              </div>
+              <div id="rise-set" class="content-stack compact-copy"></div>
+            </section>
+
+            <section class="panel panel-moon-diagnostics">
+              <div class="panel-heading">
+                <div>
+                  <h3>Diagnostic lunaire</h3>
+                  <p>Comparaison interne avec la référence USNO embarquée.</p>
+                </div>
+              </div>
+              <div id="moon-diagnostics" class="content-stack compact-copy"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="transits-section" class="dashboard-section" data-section-label="Transits">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker">Transits</div>
+              <h2>Comparer la carte active à une autre date</h2>
+            </div>
+            <p class="section-intro">Cette zone doit se lire comme un panneau d'analyse comparée, pas comme un long flux brut.</p>
+          </div>
+
+          <section class="panel panel-featured">
+            <div class="panel-heading">
+              <div>
+                <h3>Lecture de transits</h3>
+                <p>Synthèse, répartition et détail des aspects transitaires.</p>
+              </div>
+            </div>
+            <div id="transits" class="content-stack compact-copy"></div>
+          </section>
+        </section>
+
+        <section id="advanced-section" class="dashboard-section" data-section-label="Technique">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker">Technique</div>
+              <h2>Sections détaillées et couches annexes</h2>
+            </div>
+            <p class="section-intro">Les contenus experts et secondaires restent disponibles, mais ils ne doivent plus occuper la première ligne de lecture.</p>
+          </div>
+
+          <div class="advanced-stack">
+            <details class="panel-disclosure">
+              <summary>
+                <span>Familles de calcul</span>
+                <small>Organisation par catégories, méthodes et limites</small>
+              </summary>
+              <div class="panel disclosure-body">
+                <div id="calculation-groups" class="content-stack compact-copy"></div>
+              </div>
+            </details>
+
+            <details class="panel-disclosure">
+              <summary>
+                <span>Symbolique</span>
+                <small>Couches complémentaires, non astronomiques</small>
+              </summary>
+              <div class="panel disclosure-body">
+                <div id="symbolic" class="content-stack compact-copy"></div>
+              </div>
+            </details>
+          </div>
+        </section>
+      </main>
+    </div>
   </div>
 
-  <script type="module" src="./js/main.js?v=2026-04-21-02"></script>
+  <script type="module" src="./js/main.js?v=2026-04-22-01"></script>
 </body>
 </html>

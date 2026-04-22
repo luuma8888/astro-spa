@@ -1,5 +1,7 @@
 import { formatDeg, formatIsoUtc, formatIsoWithOffset } from '../ui/formatters.js';
 import { createCalculationGroup, createCalculationItem } from './chartModel.js';
+import { getConstellationLabel } from './displayLabels.js';
+import { getConstellationDatasetStatus } from '../astrology/constellations.js';
 
 function entry({
   key,
@@ -38,6 +40,8 @@ function ayanamsaLabel(key) {
 }
 
 function buildAstronomyGroup(chart) {
+  const constellationDataset = getConstellationDatasetStatus();
+
   return createCalculationGroup({
     key: 'astronomy',
     title: 'Astronomie brute',
@@ -82,6 +86,20 @@ function buildAstronomyGroup(chart) {
         category: 'astronomy',
         method: 'Variante plus dynamique du noeud lunaire.',
         usage: 'Version plus mobile du meme repere nodal.'
+      }),
+      entry({
+        key: 'constellation-dataset',
+        label: 'Couverture du dataset de constellations',
+        value: `${constellationDataset.polygonCount}/${constellationDataset.optimizedCount}`,
+        category: 'astronomy',
+        method: 'Le moteur Roman 1987 precesse d abord vers B1875 pour la determination exacte; la couche polygonale puis le dataset optimise restent disponibles en repli.',
+        usage: 'Permet de savoir si la constellation affichee vient de la couche exacte Roman87, d un polygone ou d un fallback simplifie.',
+        expectedPrecision: `${(constellationDataset.coverageRatio * 100).toFixed(1)}% de couverture polygonale`,
+        notes: constellationDataset.syntheticPolygonCount
+          ? `${constellationDataset.roman87RowCount} lignes Roman87 et ${constellationDataset.roman87NameCount} noms IAU sont charges; ${constellationDataset.syntheticPolygonCount} constellations polygonales sont synthetiques et ${constellationDataset.exactPolygonCount} sont exactes; ${constellationDataset.fallbackCount} restent en fallback optimise.`
+          : constellationDataset.fallbackCount
+            ? `${constellationDataset.roman87RowCount} lignes Roman87 et ${constellationDataset.roman87NameCount} noms IAU sont charges; ${constellationDataset.fallbackCount} constellations utilisent encore le fallback optimise.`
+            : 'Couverture polygonale complete.'
       })
     ]
   });
@@ -222,7 +240,7 @@ function buildLunarGroup(chart) {
       entry({
         key: 'moon-constellation',
         label: 'Constellation actuelle de la Lune',
-        value: chart.bodies?.moon?.constellation?.name ?? 'n/a',
+        value: getConstellationLabel(chart.bodies?.moon?.constellation).short,
         category: 'lunar',
         method: 'Test RA/Dec sur dataset de constellations actuel.',
         usage: 'Repere astronomique stellaire de la position lunaire.'
@@ -230,7 +248,7 @@ function buildLunarGroup(chart) {
       entry({
         key: 'moon-next-constellation',
         label: 'Prochaine constellation de la Lune',
-        value: transition?.to?.name ?? 'indisponible',
+        value: transition?.to ? getConstellationLabel(transition.to).short : 'indisponible',
         category: 'lunar',
         method: 'Recherche iterative du prochain changement de zone de constellation.',
         usage: 'Anticipe le prochain passage stellaire lunaire.',
@@ -345,10 +363,10 @@ function buildMissingGroup() {
       entry({
         key: 'polygon-constellations',
         label: 'Constellations polygonales reelles',
-        value: 'chantier ouvert',
+        value: 'partiellement remplacees par un dataset polygonal de transition',
         category: 'missing',
-        method: 'Architecture de fallback prevue, dataset reel absent ou vide.',
-        usage: 'Remplacer les zones optimisees simplifiees.'
+        method: 'Le moteur polygonal est branche, mais la source actuelle peut rester synthetique tant que les frontieres IAU exactes ne sont pas injectees.',
+        usage: 'Remplacer ensuite les polygones de bornes par un vrai dataset de frontieres.'
       }),
       entry({
         key: 'observatory-ephemerides',

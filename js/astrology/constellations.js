@@ -1,5 +1,14 @@
 import { CONSTELLATIONS_OPTIMIZED } from '../data/constellationsOptimized.js';
-import { CONSTELLATION_POLYGONS } from '../data/constellationsPolygons.js';
+import {
+  CONSTELLATION_POLYGON_METADATA,
+  CONSTELLATION_POLYGONS
+} from '../data/constellationsPolygons.js';
+import {
+  CONSTELLATION_ROMAN87_METADATA,
+  CONSTELLATION_ROMAN87_NAMES,
+  CONSTELLATION_ROMAN87_ROWS
+} from '../data/constellationsRoman87.js';
+import { precessEquatorial } from '../core/precession.js';
 
 function normalizeRa(ra) {
   let value = ra % 360;
@@ -36,7 +45,7 @@ function getConstellationByPolygon(raDeg, decDeg) {
     if (pointInAnyPolygon(point, constellation.polygons ?? [])) {
       return {
         ...constellation,
-        source: 'polygon'
+        source: constellation.kind === 'synthetic-bounds' ? 'polygon-synthetic' : 'polygon'
       };
     }
   }
@@ -60,9 +69,59 @@ function getConstellationByOptimizedFallback(raDeg, decDeg) {
     : null;
 }
 
-export function getConstellationByRaDec(raDeg, decDeg) {
+function besselianEpochToJulianDay(besselianEpoch) {
+  return 2415020.31352 + (besselianEpoch - 1900.0) * 365.242198781;
+}
+
+function getConstellationByRoman87(raDeg, decDeg, jd) {
+  if (!Number.isFinite(jd) || !CONSTELLATION_ROMAN87_ROWS.length) {
+    return null;
+  }
+
+  const b1875Jd = besselianEpochToJulianDay(1875.0);
+  const precessed = precessEquatorial(raDeg, decDeg, jd, b1875Jd);
+  const raHours = precessed.raDeg / 15;
+
+  for (const row of CONSTELLATION_ROMAN87_ROWS) {
+    if (row.raMinHours < raHours && raHours < row.raMaxHours && precessed.decDeg > row.decMinDeg) {
+      return {
+        abbr: row.abbr,
+        name: CONSTELLATION_ROMAN87_NAMES[row.abbr] ?? row.abbr,
+        source: 'roman87-exact',
+        frame: 'B1875',
+        ra1875Deg: precessed.raDeg,
+        dec1875Deg: precessed.decDeg
+      };
+    }
+  }
+
+  return null;
+}
+
+export function getConstellationByRaDec(raDeg, decDeg, options = {}) {
+  const roman87Match = getConstellationByRoman87(raDeg, decDeg, options.jd);
+  if (roman87Match) return roman87Match;
+
   const polygonMatch = getConstellationByPolygon(raDeg, decDeg);
   if (polygonMatch) return polygonMatch;
 
   return getConstellationByOptimizedFallback(raDeg, decDeg);
+}
+
+export function getConstellationDatasetStatus() {
+  const polygonCount = CONSTELLATION_POLYGONS.length;
+  const optimizedCount = CONSTELLATIONS_OPTIMIZED.length;
+  const coverageRatio = optimizedCount ? polygonCount / optimizedCount : 0;
+
+  return {
+    roman87RowCount: CONSTELLATION_ROMAN87_METADATA?.rowCount ?? 0,
+    roman87NameCount: CONSTELLATION_ROMAN87_METADATA?.nameCount ?? 0,
+    polygonCount,
+    optimizedCount,
+    coverageRatio,
+    fallbackCount: Math.max(optimizedCount - polygonCount, 0),
+    exactPolygonCount: CONSTELLATION_POLYGONS.filter((item) => (item.kind ?? 'exact') === 'exact').length,
+    syntheticPolygonCount: CONSTELLATION_POLYGONS.filter((item) => item.kind === 'synthetic-bounds').length,
+    metadata: CONSTELLATION_POLYGON_METADATA ?? null
+  };
 }

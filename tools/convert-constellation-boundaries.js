@@ -30,6 +30,8 @@ function parseJsonInput(rawText) {
   return parsed.map((item) => ({
     abbr: item.abbr,
     name: item.name,
+    kind: item.kind ?? 'exact',
+    notes: item.notes ?? null,
     polygons: (item.polygons ?? []).map((poly) =>
       poly.map((point) => ({
         ra: normalizeRa(point.ra),
@@ -93,6 +95,10 @@ function validatePolygons(items) {
       throw new Error('Constellation invalide: abbr ou name manquant.');
     }
 
+    if (item.kind && typeof item.kind !== 'string') {
+      throw new Error(`Type de dataset invalide pour ${item.abbr}`);
+    }
+
     if (!Array.isArray(item.polygons) || !item.polygons.length) {
       throw new Error(`Aucun polygone pour ${item.abbr}`);
     }
@@ -128,7 +134,27 @@ function sortConstellations(items) {
 }
 
 function toJsModule(data) {
-  return `export const CONSTELLATION_POLYGONS = ${JSON.stringify(data, null, 2)};\n`;
+  const kindCounts = data.reduce((acc, item) => {
+    const key = item.kind ?? 'exact';
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const metadata = {
+    constellationCount: data.length,
+    polygonCount: data.reduce((sum, item) => sum + (item.polygons?.length ?? 0), 0),
+    pointCount: data.reduce(
+      (sum, item) => sum + (item.polygons ?? []).reduce((polySum, poly) => polySum + poly.length, 0),
+      0
+    ),
+    kindCounts
+  };
+
+  return [
+    `export const CONSTELLATION_POLYGON_METADATA = ${JSON.stringify(metadata, null, 2)};`,
+    `export const CONSTELLATION_POLYGONS = ${JSON.stringify(data, null, 2)};`,
+    ''
+  ].join('\n');
 }
 
 function ensureOutputDirectory(filePath) {

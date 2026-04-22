@@ -68,14 +68,14 @@ export function buildChart(input, options = {}) {
   const houseCusps = houseSystem.cusps;
 
   const enrichedBodies = {
-    sun: enrichBody(sun, houseCusps, chart.options.ayanamsa),
-    moon: enrichBody(moon, houseCusps, chart.options.ayanamsa)
+    sun: enrichBody({ ...sun, jd }, houseCusps, chart.options.ayanamsa),
+    moon: enrichBody({ ...moon, jd }, houseCusps, chart.options.ayanamsa)
   };
 
   const planets = Object.fromEntries(
     Object.entries(planetsRaw).map(([key, planet]) => [
       key,
-      enrichBody(planet, houseCusps, chart.options.ayanamsa)
+      enrichBody({ ...planet, jd }, houseCusps, chart.options.ayanamsa)
     ])
   );
 
@@ -147,7 +147,9 @@ export function buildChart(input, options = {}) {
 function enrichBody(body, houseCusps, ayanamsaKey) {
   const tropical = getTropicalSign(body.longitudeDeg);
   const sidereal = getSiderealSign(body.longitudeDeg, ayanamsaKey);
-  const constellation = getConstellationByRaDec(body.rightAscensionDeg, body.declinationDeg);
+  const constellation = getConstellationByRaDec(body.rightAscensionDeg, body.declinationDeg, {
+    jd: body.jd
+  });
   const house = findHouse(body.longitudeDeg, houseCusps);
 
   return {

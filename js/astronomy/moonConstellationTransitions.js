@@ -9,7 +9,7 @@ function getMoonConstellationAtJd(jd) {
   const moon = computeMoonFromJd(jd);
   return {
     body: moon,
-    constellation: getConstellationByRaDec(moon.rightAscensionDeg, moon.declinationDeg)
+    constellation: getConstellationByRaDec(moon.rightAscensionDeg, moon.declinationDeg, { jd })
   };
 }
 

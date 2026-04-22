@@ -10,9 +10,17 @@ export function renderHouses(chart) {
     }));
 
   el.innerHTML = `
-    <p><strong>Repère :</strong> chaque cuspide est la longitude d’ouverture d’une maison dans le système ${chart.houseSystem}.</p>
-    ${houseRows
-      .map((item) => `<p>Maison ${item.index}: ${item.longitudeText}</p>`)
+    <div class="section-block section-block-intro">
+      <p>Chaque cuspide est la longitude d’ouverture d’une maison dans le système ${chart.houseSystem}.</p>
+    </div>
+    <div class="house-grid">
+      ${houseRows
+      .map((item) => `
+        <article class="house-chip">
+          <span class="house-label">Maison ${item.index}</span>
+          <strong>${item.longitudeText}</strong>
+        </article>
+      `)
       .join('')}
-  `;
+    </div>`;
 }

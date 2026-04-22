@@ -26,8 +26,8 @@ Cette matrice ne recopie pas les 164 sections une a une. Elle les regroupe en lo
 | Phase 2: synthese et niveaux de lecture | 79 a 128 | present | `js/domain/synthesis.js`, `js/ui/renderSynthesis.js`, `js/domain/transits.js`, `js/ui/renderTransits.js` | La synthese existe, avec niveaux `short / medium / long` et lecture des transits plus structuree. |
 | Clarification des resultats et familles de calcul | hors document initial explicite | present | `js/ui/renderClarifications.js`, `js/ui/renderCalculationGroups.js`, `js/ui/renderSummary.js`, `js/ui/renderBodies.js` | Ajout utile pour expliciter ce qui est calcule et ce qui ne l'est pas encore. |
 | Precision Soleil / Lune et validation | hors document initial explicite | present | `js/astronomy/sun.js`, `js/astronomy/moon.js`, `js/astronomy/moonPhases.js`, `js/astronomy/riseSet.js`, `tools/*`, `docs/validation-precision.md` | Le moteur a ete renforce et un harnais de validation officiel existe maintenant. |
-| Constellations polygonales reelles et outillage de conversion | 129 a 164 | absent | aucun equivalent branche | Le projet reste base sur des constellations optimisees simplifiees. |
-| Constellation lunaire courante et prochain passage | extension locale | en cours | `js/astronomy/moonConstellationTransitions.js`, `js/domain/chartBuilder.js`, `js/ui/renderBodies.js` | Lot local non commit au moment de cette matrice. |
+| Constellations polygonales reelles et outillage de conversion | 129 a 164 | partiel | `js/data/constellationsRoman87.js`, `js/data/constellationsPolygons.js`, `js/astrology/constellations.js`, `tools/convert-constellation-roman87.js`, `tools/convert-constellation-boundaries.js`, `tools/generate-synthetic-constellation-boundaries.mjs`, `tools/validate-constellations.mjs` | Determination exacte branchee via Roman 1987 + precession B1875. La couche polygonale reste complete en couverture mais encore synthetique. |
+| Constellation lunaire courante et prochain passage | extension locale | present | `js/astronomy/moonConstellationTransitions.js`, `js/domain/chartBuilder.js`, `js/ui/renderBodies.js` | Calculee et rendue dans l interface. |
 
 ## Detail par lot
 
@@ -39,7 +39,7 @@ Cette matrice ne recopie pas les 164 sections une a une. Elle les regroupe en lo
 | Validation d'entree | present | `js/domain/validators.js` | Branchee dans natal et transits. |
 | Orchestration centrale | present | `js/app.js` | Flux principal centralise et coherent. |
 | Etat UI minimal | present | `js/ui/state.js` | Utilise pour la carte courante, l'entree courante, le niveau de synthese et le resultat de transit courant. |
-| Contrats de donnees formalises | partiel | `js/domain/chartModel.js` | Le modele existe mais reste leger. Pas encore de schema riche par famille de calcul. |
+| Contrats de donnees formalises | present | `js/domain/chartModel.js`, `js/domain/calculationGroups.js` | Le modele expose des groupes de calculs, presentations dediees et metadonnees de precision/usage. |
 
 ### 2. Stockage et persistance
 
@@ -91,16 +91,19 @@ Cette matrice ne recopie pas les 164 sections une a une. Elle les regroupe en lo
 | Harnais de validation precision Soleil / Lune | present | `package.json`, `tools/validate-precision.mjs`, `tools/precision-fixtures.js`, `docs/validation-precision.md` | Validation sur fixtures officielles USNO. |
 | Cas standards multiplateformes horaires | present | `tools/precision-fixtures.js` | Couvre offsets entiers et fractionnaires. |
 | Cas limites hautes latitudes dans suite stricte | partiel | `docs/validation-precision.md` | Documentes comme limite connue, pas encore inclus dans la suite stricte. |
-| Validation des constellations reelles | absent | aucun | Depend du futur chantier polygonal. |
+| Validation des constellations reelles | partiel | `tools/validate-constellations.mjs` | Validation structurelle, mesure de couverture et controle de coherence Roman87 presentes, mais pas encore de verification scientifique exhaustive du maillage. |
 
 ### 6. Donnees reelles de constellations
 
 | Element | Statut | Fichiers | Note |
 | --- | --- | --- | --- |
 | Constellations optimisees simplifiees | present | `js/data/constellationsOptimized.js`, `js/astrology/constellations.js` | Solution legere exploitable aujourd'hui. |
-| Dataset polygonal reel | absent | aucun | `js/data/constellationsPolygons.js` absent. |
-| Script de conversion | absent | aucun equivalent a `tools/convert-constellation-boundaries.js` | Le document le prevoit mais il n'est pas encore implemente. |
-| Validation du dataset | absent | aucun | Aucun outillage de verification polygonale. |
+| Dataset Roman87 exact | present | `js/data/constellationsRoman87.js`, `js/core/precession.js`, `js/astrology/constellations.js` | 357 lignes de limites Roman87 et 88 noms IAU charges; la determination exacte precesse les coordonnees vers B1875 avant test. |
+| Dataset polygonal reel | partiel | `js/data/constellationsPolygons.js` | Couverture complete 88/88, mais jeu courant synthetique base sur les rectangles de `constellationsOptimized.js`. |
+| Script de conversion Roman87 | present | `tools/convert-constellation-roman87.js` | Convertit les fichiers de reference telecharges vers un module JS consomme par l application. |
+| Script de conversion | present | `tools/convert-constellation-boundaries.js` | Convertit une source JSON ou texte delimitee vers le module JS consomme par l application. |
+| Generation dataset de transition | present | `tools/generate-synthetic-constellation-boundaries.mjs` | Produit un jeu polygonal complet de transition a partir des bornes optimisees. |
+| Validation du dataset | partiel | `tools/validate-constellations.mjs` | Controle la structure, la couverture, le type de source polygonale et la coherence du jeu Roman87. |
 
 ## Ce qui est effectivement termine
 
@@ -111,11 +114,9 @@ Cette matrice ne recopie pas les 164 sections une a une. Elle les regroupe en lo
 
 ## Ce qui reste partiel ou ouvert
 
-- `js/domain/chartModel.js` ne joue pas encore le role d'un vrai contrat de donnees riche.
 - La roue reste un rendu utile mais pas encore mature.
-- La couche de constellations reelles polygonales prevue aux sections 129 a 164 n'est pas commencee.
+- La determination de constellation est maintenant fiable structurellement via Roman87, mais la couche polygonale auxiliaire n'est pas encore basee sur les frontieres IAU exactes.
 - Les cas extremes de Lune continuellement au-dessus ou au-dessous de l'horizon restent hors suite stricte de validation.
-- Le lot local sur la constellation de la Lune et son prochain passage est en cours mais non commit au moment de cette mise a jour.
 
 ## Ecart principal avec le document d'architecture
 
@@ -123,55 +124,39 @@ L'ecart principal n'est plus la structure generale ni le flux applicatif.
 
 L'ecart principal est maintenant:
 
-1. l'absence des constellations polygonales reelles et de leur outillage
-2. l'absence d'un modele de donnees de calculs plus formalise
-3. le manque de couverture des cas limites lunaires dans la validation stricte
+1. l'absence d'un vrai dataset polygonal exact pour remplacer le jeu synthetique de transition
+2. le manque de couverture des cas limites lunaires dans la validation stricte
+3. la roue encore fonctionnelle mais pas mature visuellement et geometriquement
 
 ## Prochaines etapes recommandees
 
 ### Etape immediate
 
-Committer le lot local en cours:
+Maintenir Roman87 comme source exacte, puis remplacer le dataset polygonal synthetique par une vraie source de frontieres:
 
-- `js/astronomy/moonConstellationTransitions.js`
-- mise a jour de `js/domain/chartBuilder.js`
-- mise a jour de `js/ui/renderBodies.js`
-- extension des fixtures et de la documentation de validation
-
-### Etape suivante la plus structurante
-
-Normaliser les resultats de calcul dans le domaine, avec une structure du type:
-
-- valeur
-- unite
-- categorie
-- methode
-- precision attendue
-- usage
-
-Le but est d'eviter que la clarification reste seulement dans l'UI.
+- `npm run generate:constellations:synthetic`
+- `npm run convert:constellations`
+- `npm run convert:constellations:roman87`
+- `npm run validate:constellations`
 
 ### Etape technique majeure restante
 
 Ouvrir le chantier des constellations polygonales reelles prevu par les sections 129 a 164:
 
-1. ajouter `js/data/constellationsPolygons.js`
-2. remplacer ou doubler `js/astrology/constellations.js`
-3. ajouter un script de conversion type `tools/convert-constellation-boundaries.js`
-4. ajouter une validation minimale du dataset
+1. remplacer `tools/raw-constellation-boundaries.json` par une source IAU / VI-49 convertie
+2. regenerer `js/data/constellationsPolygons.js`
+3. ajouter ensuite une verification geometrique plus forte sur un echantillon de points connus
 
 ## Backlog priorise
 
 | Priorite | Action | Pourquoi maintenant |
 | --- | --- | --- |
-| P1 | Committer le lot local constellation lunaire + validation elargie | Etat de travail deja avance, faible risque, gain utilisateur direct. |
-| P2 | Formaliser le modele de donnees des calculs | Necessaire pour rendre l'explication des resultats robuste et reutilisable. |
-| P3 | Etendre la validation de precision a plus de cas et a plus de sorties | Pour fiabiliser davantage Soleil / Lune. |
-| P4 | Lancer les constellations polygonales reelles | Plus gros ecart restant avec l'architecture cible. |
-| P5 | Reprendre ensuite la roue et les raffinements UI | Important, mais moins structurant que les trois chantiers precedents. |
+| P1 | Remplacer le dataset polygonal synthetique par un dataset polygonal exact | La determination exacte est deja couverte par Roman87; le goulot restant est la fidelite de la couche polygonale. |
+| P2 | Etendre la validation de precision a plus de cas et a plus de sorties | Pour fiabiliser davantage Soleil / Lune. |
+| P3 | Reprendre la roue et les raffinements UI | Le socle metier est deja nettement plus solide que la couche visuelle. |
 
 ## Decision pratique
 
-Si l'objectif est d'avancer en restant aligne avec le document et avec la priorite actuelle "calculs + clarification", le prochain lot le plus juste est:
+Si l'objectif est d'avancer en restant aligne avec le document, le prochain lot le plus juste est:
 
-`formaliser les resultats de calcul dans le domaine, puis ouvrir le chantier constellations polygonales`
+`injecter un vrai dataset polygonal exact, puis ajouter une validation geometrique plus forte`

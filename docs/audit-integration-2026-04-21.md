@@ -62,7 +62,7 @@ Etat d'alignement observe:
 - parties 1 a 54: globalement presentes ou deja tres proches dans le depot
 - parties 55 a 68: partiellement absentes au depart, puis integrees dans cette mise a jour
 - parties 79 a 85: premiere integration realisee avec le module de synthese
-- parties 129 a 164: non traitees ici, car elles supposent le dataset polygonal reel et l'outillage de conversion
+- parties 129 a 164: partiellement traitees ensuite avec une determination exacte Roman87 branchee et un pipeline polygonal complet en couverture, mais encore alimente cote polygones par un dataset synthetique de transition plutot que par les frontieres IAU exactes
 
 ## Ecart probable avec une architecture en 164 parties
 

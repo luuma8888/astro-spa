@@ -1,0 +1,259 @@
+GUIDANCE DESIGN / STYLE / ERGONOMIE
+Projet: Astro App
+Date: 2026-04-22
+
+But du document
+Conserver une direction claire pour la refonte visuelle et ergonomique de l'application avant suppression du dossier temporaire `references-tmp`.
+Ce document sert de mémoire de design pour la prochaine action.
+
+Sources d'inspiration analysées
+- `references-tmp/espace-interieur.html`
+- `references-tmp/eveil.html`
+- `references-tmp/design-humain-cg.html`
+
+Ce qui ressort fortement des références
+- Présence d'un vrai app shell de type dashboard: sidebar fixe sur desktop, header/topbar sticky, contenu principal centré.
+- Surface claire, douce, respirable: fond général légèrement teinté, cartes blanches ou ivoire, bordures fines, ombres très modérées.
+- Interface modulaire: cartes, stats, badges, tabs, callouts, blocs d'introduction, cartes d'action rapide.
+- Grande hiérarchie visuelle: un hero d'entrée, puis des sections secondaires clairement séparées.
+- Densité d'information maîtrisée: on ne montre pas tout au même niveau; on regroupe et on hiérarchise.
+- Responsive sérieux: sidebar repliable sur mobile, cartes qui passent de 3-4 colonnes à 1 colonne, tabs scrollables horizontalement.
+- Typographie mixte: serif expressive pour les titres, sans-serif sobre pour le corps.
+- Couleurs nuancées, non agressives: palettes terre, sauge, crème, bleu grisé, cuivre, or doux.
+- Ergonomie centrée sur la consultation: lecture plus facile, panneaux moins interminables, plus de résumés, plus de blocs compacts.
+
+Constat sur l'application actuelle
+- La grille actuelle met presque tous les blocs au même niveau.
+- Les panneaux sont visuellement identiques, donc rien ne guide le regard.
+- Les sections longues deviennent fatigantes à lire.
+- Les formulaires et les résultats cohabitent sans structure globale.
+- L'application ressemble à un assemblage de cartes fonctionnelles, pas à un dashboard pilotable.
+- La roue, la synthèse, les transits et les diagnostics n'ont pas encore la priorité visuelle qu'ils méritent.
+
+Direction graphique à viser
+- Style général: dashboard sobre, clair, calme, expert, contemporain, légèrement contemplatif.
+- Éviter le look "outil admin brut" et éviter aussi le look ésotérique surchargé.
+- La sensation recherchée: application de consultation riche, structurée, fluide, lisible pendant de longues sessions.
+- Couleurs: fond crème/gris chaud, surfaces ivoire, accents sauge/bleu pétrole/cuivre/or doux. Pas de violet dominant par défaut.
+- Contraste: suffisant pour la lecture, mais sans noir pur sur blanc pur.
+- Ombres: légères, larges, douces. Les bordures doivent faire l'essentiel du travail.
+- Rayons: moyens à généreux, sans tomber dans le "glassmorphism gadget".
+- Effets: très peu d'effets gratuits; seulement transitions d'état utiles.
+
+Direction typographique
+- Titres principaux et titres de section: serif élégante et calme.
+- Texte courant, labels, tableaux, actions: sans-serif moderne et lisible.
+- Titres plus grands et plus espacés qu'aujourd'hui.
+- Réduire les longs paragraphes continus en blocs plus respirables.
+- Utiliser plus souvent:
+  - micro-titres
+  - labels de catégorie
+  - badges de statut
+  - sous-textes courts
+
+Architecture d'écran recommandée
+- Desktop:
+  - sidebar fixe à gauche pour navigation et filtres globaux
+  - header sticky au-dessus du contenu principal
+  - zone centrale avec largeur max contrôlée
+  - sections organisées par priorité métier
+- Mobile:
+  - topbar sticky avec bouton menu
+  - sidebar en drawer
+  - navigation secondaire par tabs ou sous-nav scrollable
+  - une seule colonne
+
+Structure de page recommandée
+- 1. Hero de synthèse en haut
+  - identité de la carte active
+  - date/heure/lieu
+  - système de maisons / ayanamsa
+  - 3 à 6 métriques clés
+  - actions principales
+- 2. Zone "lecture rapide"
+  - résumé
+  - points majeurs
+  - statut des calculs / précision / source
+- 3. Zone "exploration"
+  - onglets ou sections pilotables
+  - corps célestes
+  - maisons
+  - aspects
+  - phase lunaire
+  - transits
+  - roue
+  - symbolique
+  - détails techniques
+- 4. Zone "outils / réglages"
+  - formulaires
+  - sauvegarde / import / export
+  - options de lecture
+
+Priorité ergonomique absolue
+Le problème principal n'est pas la beauté, c'est la longueur de consultation.
+Il faut donc:
+- compacter les informations répétitives
+- créer plusieurs niveaux de lecture
+- éviter les murs de texte
+- isoler les contenus experts dans des sous-sections moins dominantes
+
+Principes de réorganisation du contenu
+- Ne plus afficher tous les panels en grille uniforme.
+- Passer à une logique de dashboard éditorialisé.
+- Créer des blocs prioritaires, secondaires et détaillés.
+- Introduire des accordéons, tabs ou sous-vues pour les sections lourdes.
+- Réserver les longues explications aux vues détaillées.
+- Ajouter des résumés courts en tête de section.
+
+Répartition recommandée des modules
+- Bloc A: Hero + statut global
+- Bloc B: Résumé + synthèse + clarifications essentielles
+- Bloc C: Roue + corps célestes + maisons
+- Bloc D: Aspects + phase lunaire + diagnostics lunaires
+- Bloc E: Transits / comparaison
+- Bloc F: Détails techniques / familles de calcul
+- Bloc G: Symbolique / annexes
+
+Éléments UI à créer ou refondre
+- App shell avec:
+  - sidebar
+  - topbar
+  - conteneur principal
+  - largeur max
+- Hero principal
+- Cartes de métriques
+- Cartes d'action rapide
+- Tabs horizontaux ou nav secondaire
+- Sous-cartes de section
+- Callouts d'information / limite / précision
+- Badges de statut:
+  - exact
+  - approximatif
+  - symbolique
+  - diagnostic
+- Composants de liste compacts pour:
+  - corps célestes
+  - aspects
+  - transits
+- Panneaux repliables pour diagnostics longs
+- Barre d'outils pour formulaires et sauvegarde
+
+Comportement des formulaires
+- Le formulaire natal ne doit plus être un gros bloc brut au même niveau que tout le reste.
+- Le formulaire doit devenir un panneau de contrôle plus compact.
+- Sur desktop:
+  - soit dans la sidebar secondaire
+  - soit dans une carte dédiée en tête ou en drawer latéral
+- Sur mobile:
+  - section repliable
+- Les actions `Calculer`, `Sauvegarder`, `Charger`, `Exporter`, `Importer` doivent être regroupées visuellement.
+- Le statut d'application doit devenir un badge ou un callout discret, pas un simple paragraphe.
+
+Comportement des résultats
+- Résumé:
+  - très visible, peu verbeux, immédiatement lisible
+- Clés de lecture:
+  - compactes, sous forme de cartes ou puces courtes
+- Familles de calcul:
+  - à descendre plus bas dans la page
+  - vue experte, pas section primaire
+- Corps célestes:
+  - vue tableau/cartes compactes, avec un niveau "plus de détails"
+- Aspects:
+  - vue dense mais filtrable
+- Phase lunaire et diagnostics:
+  - fusion partielle ou voisinage fort
+- Transits:
+  - doivent devenir une vraie zone de comparaison, pas juste un long flux de texte
+
+Hiérarchie de lecture recommandée
+- Niveau 1: ce qu'il faut comprendre en 15 secondes
+- Niveau 2: ce qu'il faut consulter en 2 minutes
+- Niveau 3: ce qu'on ouvre quand on veut approfondir
+
+Règles visuelles concrètes
+- Fond général non blanc pur.
+- Chaque section importante doit commencer par:
+  - un titre
+  - un sous-titre ou une phrase d'usage
+  - éventuellement une action
+- Les cartes ne doivent pas toutes avoir la même importance visuelle.
+- Utiliser des grilles différentes selon le type de contenu:
+  - métriques: 3 ou 4 colonnes
+  - cartes d'exploration: 2 colonnes
+  - contenu expert: 1 colonne
+- Prévoir plus d'espace vertical entre les grandes sections.
+- Réduire les longueurs de ligne pour les textes explicatifs.
+- Le canvas de roue doit être placé dans un cadre visuel plus fort que le reste.
+
+Responsive attendu
+- >= 1200 px:
+  - sidebar visible
+  - contenu principal centré
+  - 2 à 4 colonnes selon les blocs
+- 768 px à 1199 px:
+  - sidebar plus compacte ou repliable
+  - passage progressif à 2 colonnes
+- < 768 px:
+  - 1 colonne
+  - sidebar en drawer
+  - tabs scrollables
+  - formulaires découpés en groupes
+  - boutons importants pleines largeur si nécessaire
+
+Palette suggérée pour la refonte
+- Fond principal: crème minérale ou gris chaud très clair
+- Surfaces: ivoire / blanc cassé
+- Texte principal: brun-gris profond ou bleu-noir doux
+- Accent primaire: sauge profonde ou pétrole doux
+- Accent secondaire: cuivre / terre cuite atténuée
+- Accent d'état: or pâle, vert grisé, bleu brume
+
+Direction motion
+- Animations courtes, discrètes, structurantes
+- autorisées:
+  - apparition douce des sections
+  - hover léger sur cartes cliquables
+  - transition d'onglets
+  - ouverture/fermeture de panneaux
+- à éviter:
+  - animations décoratives permanentes
+  - effets flashy
+
+Ce qu'il faudra éviter
+- Empiler des panneaux blancs identiques.
+- Laisser tous les contenus ouverts par défaut.
+- Multiplier les couleurs sans rôle clair.
+- Utiliser une typographie système banale comme unique langage visuel.
+- Faire un design "mystique chargé" ou un dark mode forcé.
+- Conserver la grille uniforme actuelle.
+
+Décision stratégique importante
+La prochaine refonte design ne doit pas être un simple re-skin CSS.
+Elle doit combiner:
+- nouveau shell
+- nouvelle hiérarchie d'information
+- regroupement des modules
+- réduction de la fatigue visuelle
+
+Ordre d'implémentation recommandé pour la prochaine action
+- 1. Repenser le shell HTML global
+- 2. Poser les nouveaux tokens CSS
+- 3. Créer sidebar + topbar + hero
+- 4. Réorganiser les sections par priorité
+- 5. Refondre les cartes de résultats longues en vues plus compactes
+- 6. Traiter mobile et drawer
+- 7. Finir par les détails décoratifs et la micro-motion
+
+Décision mémoire à conserver
+Les calculs, validations et la couche constellation ont déjà beaucoup avancé.
+La prochaine étape produit/design doit préserver ce socle et améliorer avant tout:
+- lisibilité
+- hiérarchie
+- consultation longue durée
+- navigation
+- densité d'information
+
+Statut du dossier temporaire
+`references-tmp` a uniquement servi de matériau d'inspiration.
+Il ne doit pas être intégré au résultat final ni être conservé pour commit.

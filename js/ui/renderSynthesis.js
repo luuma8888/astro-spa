@@ -4,7 +4,9 @@ function renderSection(title, items) {
   return `
     <div class="synthesis-section">
       <h3>${title}</h3>
-      ${items.map((item) => `<p>${item}</p>`).join('')}
+      <div class="bullet-list">
+        ${items.map((item) => `<p>${item}</p>`).join('')}
+      </div>
     </div>
   `;
 }
