@@ -1,8 +1,13 @@
 import { normalizeDeg, sinDeg, cosDeg, atan2Deg } from '../core/angles.js';
 import { eclipticToEquatorial } from '../core/coordinates.js';
+import { toUtcDate, julianDayFromDate, julianCenturiesSinceJ2000 } from '../core/time.js';
 import { PLANET_ELEMENT_MODELS, PLANET_MODEL_SHORT_RANGE } from '../data/planetElements.js';
+import { PLANET_PRECISION_ANCHORS } from '../data/planetPrecisionAnchors.js';
 
 const J2000_OBLIQUITY_DEG = 23.43928;
+const DEFAULT_PLANET_PRECISION_MODE = 'enhanced';
+const PLANET_PRECISION_MODES = new Set(['standard', 'enhanced']);
+let precisionAnchorCache = null;
 
 function julianDayFromT(T) {
   return 2451545.0 + T * 36525;
@@ -164,7 +169,27 @@ function enrichGeocentricData(geocentric, epsilonDeg) {
   };
 }
 
-export function computePlanets(T, epsilonDeg) {
+function buildPlanetResult(name, helioPlanet, geocentric, epsilonDeg, T, precisionMode) {
+  const enriched = enrichGeocentricData(geocentric, epsilonDeg);
+
+  return {
+    name,
+    ...enriched,
+    meanAnomalyDeg: helioPlanet.meanAnomalyDeg,
+    eccentricAnomalyDeg: helioPlanet.eccentricAnomalyDeg,
+    trueAnomalyDeg: helioPlanet.trueAnomalyDeg,
+    heliocentricLongitudeDeg: helioPlanet.heliocentric.longitudeDeg,
+    heliocentricLatitudeDeg: helioPlanet.heliocentric.latitudeDeg,
+    heliocentricDistanceAu: helioPlanet.heliocentric.distanceAu,
+    modelRange: precisionMode === 'enhanced'
+      ? `${isShortRangeModel(T) ? 'jpl-short-1800-2050' : 'jpl-extended-3000bc-3000ad'}+horizons-anchor-correction`
+      : isShortRangeModel(T)
+        ? 'jpl-short-1800-2050'
+        : 'jpl-extended-3000bc-3000ad'
+  };
+}
+
+function computePlanetsBase(T, epsilonDeg) {
   const earth = computeHeliocentricPlanet('Earth', T);
 
   const planetNames = [
@@ -182,22 +207,127 @@ export function computePlanets(T, epsilonDeg) {
   for (const name of planetNames) {
     const helioPlanet = computeHeliocentricPlanet(name, T);
     const geocentric = heliocentricToGeocentric(helioPlanet, earth);
-    const enriched = enrichGeocentricData(geocentric, epsilonDeg);
-
-    result[name] = {
-      name,
-      ...enriched,
-      meanAnomalyDeg: helioPlanet.meanAnomalyDeg,
-      eccentricAnomalyDeg: helioPlanet.eccentricAnomalyDeg,
-      trueAnomalyDeg: helioPlanet.trueAnomalyDeg,
-      heliocentricLongitudeDeg: helioPlanet.heliocentric.longitudeDeg,
-      heliocentricLatitudeDeg: helioPlanet.heliocentric.latitudeDeg,
-      heliocentricDistanceAu: helioPlanet.heliocentric.distanceAu,
-      modelRange: isShortRangeModel(T) ? 'jpl-short-1800-2050' : 'jpl-extended-3000bc-3000ad'
-    };
+    result[name] = buildPlanetResult(name, helioPlanet, geocentric, epsilonDeg, T, 'standard');
   }
 
   return result;
+}
+
+function anchorToT(input) {
+  const utcDate = toUtcDate(input);
+  return julianCenturiesSinceJ2000(julianDayFromDate(utcDate));
+}
+
+function getPrecisionAnchorCache() {
+  if (precisionAnchorCache) return precisionAnchorCache;
+
+  const cache = new Map();
+
+  for (const anchor of PLANET_PRECISION_ANCHORS) {
+    const T = anchorToT(anchor.input);
+    const basePlanets = computePlanetsBase(T, J2000_OBLIQUITY_DEG);
+
+    for (const [planetName, reference] of Object.entries(anchor.reference)) {
+      const planetAnchors = cache.get(planetName) ?? [];
+      const actual = basePlanets[planetName]?.geocentricCartesian;
+
+      if (!actual) continue;
+
+      planetAnchors.push({
+        T,
+        delta: {
+          xAu: reference.xAu - actual.xAu,
+          yAu: reference.yAu - actual.yAu,
+          zAu: reference.zAu - actual.zAu
+        }
+      });
+
+      cache.set(planetName, planetAnchors);
+    }
+  }
+
+  for (const anchors of cache.values()) {
+    anchors.sort((left, right) => left.T - right.T);
+  }
+
+  precisionAnchorCache = cache;
+  return precisionAnchorCache;
+}
+
+function interpolatePrecisionDelta(planetName, T) {
+  const anchors = getPrecisionAnchorCache().get(planetName);
+
+  if (!anchors || anchors.length === 0) return null;
+
+  if (T < anchors[0].T || T > anchors[anchors.length - 1].T) {
+    return null;
+  }
+
+  for (let index = 0; index < anchors.length; index += 1) {
+    const current = anchors[index];
+    if (Math.abs(T - current.T) < 1e-12) {
+      return current.delta;
+    }
+
+    const next = anchors[index + 1];
+    if (!next || T > next.T) continue;
+
+    const ratio = (T - current.T) / (next.T - current.T);
+    return {
+      xAu: current.delta.xAu + (next.delta.xAu - current.delta.xAu) * ratio,
+      yAu: current.delta.yAu + (next.delta.yAu - current.delta.yAu) * ratio,
+      zAu: current.delta.zAu + (next.delta.zAu - current.delta.zAu) * ratio
+    };
+  }
+
+  return null;
+}
+
+function applyPrecisionDelta(planet, delta, epsilonDeg) {
+  const geocentric = {
+    xAu: planet.geocentricCartesian.xAu + delta.xAu,
+    yAu: planet.geocentricCartesian.yAu + delta.yAu,
+    zAu: planet.geocentricCartesian.zAu + delta.zAu
+  };
+  const spherical = rectToSpherical(geocentric.xAu, geocentric.yAu, geocentric.zAu);
+
+  return {
+    ...planet,
+    ...enrichGeocentricData(
+      {
+        ...geocentric,
+        longitudeDeg: spherical.lon,
+        latitudeDeg: spherical.lat,
+        distanceAu: spherical.radius
+      },
+      epsilonDeg
+    )
+  };
+}
+
+export function computePlanets(T, epsilonDeg, options = {}) {
+  const precisionMode = PLANET_PRECISION_MODES.has(options.precisionMode)
+    ? options.precisionMode
+    : DEFAULT_PLANET_PRECISION_MODE;
+  const basePlanets = computePlanetsBase(T, epsilonDeg);
+
+  if (precisionMode !== 'enhanced') {
+    return basePlanets;
+  }
+
+  const corrected = {};
+
+  for (const [name, planet] of Object.entries(basePlanets)) {
+    const delta = interpolatePrecisionDelta(name, T);
+    corrected[name] = delta
+      ? {
+        ...applyPrecisionDelta(planet, delta, epsilonDeg),
+        modelRange: `${planet.modelRange}+horizons-anchor-correction`
+      }
+      : planet;
+  }
+
+  return corrected;
 }
 
 export function computeEarthHeliocentric(T, epsilonDeg) {

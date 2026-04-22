@@ -36,7 +36,8 @@ export function buildChart(input, options = {}) {
   chart.meta = createModelMeta();
   chart.options = {
     houseSystem: options.houseSystem ?? 'porphyry',
-    ayanamsa: options.ayanamsa ?? 'lahiri'
+    ayanamsa: options.ayanamsa ?? 'lahiri',
+    planetPrecisionMode: options.planetPrecisionMode ?? 'enhanced'
   };
 
   const utcDate = toUtcDate(input);
@@ -55,7 +56,9 @@ export function buildChart(input, options = {}) {
 
   const sun = computeSun(T, epsilonDeg);
   const moon = computeMoon(T, epsilonDeg);
-  const planetsRaw = computePlanets(T, epsilonDeg);
+  const planetsRaw = computePlanets(T, epsilonDeg, {
+    precisionMode: chart.options.planetPrecisionMode
+  });
   const meanNode = meanLunarNode(T);
   const trueNode = trueLunarNode(T);
 
@@ -140,6 +143,12 @@ export function buildChart(input, options = {}) {
   }));
   chart.calculations = createCalculationCatalog(buildCalculationGroups(chart));
   chart.synthesis = buildChartSynthesis(chart);
+
+  if (chart.options.planetPrecisionMode === 'enhanced') {
+    chart.meta.precision.coreAstronomy.level = 'élevée pragmatique renforcée';
+    chart.meta.precision.coreAstronomy.summary = 'Le moteur combine le calcul local Soleil/Lune/planètes avec une correction interpolée sur ancrages officiels JPL Horizons pour améliorer les coordonnées planétaires géocentriques.';
+    chart.meta.precision.coreAstronomy.evidence = 'Validation locale sur fixtures USNO pour Soleil/Lune et ancrages officiels JPL Horizons versionnés pour les planètes.';
+  }
 
   return chart;
 }

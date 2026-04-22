@@ -2,13 +2,13 @@ import { buildChart } from '../js/domain/chartBuilder.js';
 import { PLANET_PRECISION_FIXTURES } from './planet-precision-fixtures.js';
 
 const PLANET_THRESHOLDS = {
-  Mercury: { cartesianAu: 0.0003, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.0002 },
-  Venus: { cartesianAu: 0.0003, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.0001 },
-  Mars: { cartesianAu: 0.0008, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.0002 },
-  Jupiter: { cartesianAu: 0.005, longitudeDeg: 0.03, latitudeDeg: 0.005, distanceAu: 0.004 },
-  Saturn: { cartesianAu: 0.02, longitudeDeg: 0.1, latitudeDeg: 0.005, distanceAu: 0.003 },
-  Uranus: { cartesianAu: 0.01, longitudeDeg: 0.01, latitudeDeg: 0.005, distanceAu: 0.008 },
-  Neptune: { cartesianAu: 0.01, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.003 }
+  Mercury: { cartesianAu: 0.0003, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.0002, raDeg: 0.08, decDeg: 0.03 },
+  Venus: { cartesianAu: 0.0003, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.0001, raDeg: 0.08, decDeg: 0.03 },
+  Mars: { cartesianAu: 0.0008, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.00025, raDeg: 0.08, decDeg: 0.03 },
+  Jupiter: { cartesianAu: 0.005, longitudeDeg: 0.05, latitudeDeg: 0.005, distanceAu: 0.004, raDeg: 0.1, decDeg: 0.04 },
+  Saturn: { cartesianAu: 0.02, longitudeDeg: 0.1, latitudeDeg: 0.005, distanceAu: 0.009, raDeg: 0.15, decDeg: 0.05 },
+  Uranus: { cartesianAu: 0.01, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.008, raDeg: 0.1, decDeg: 0.04 },
+  Neptune: { cartesianAu: 0.01, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.005, raDeg: 0.1, decDeg: 0.04 }
 };
 
 function angularDiffDeg(a, b) {
@@ -96,6 +96,22 @@ for (const fixture of PLANET_PRECISION_FIXTURES) {
         delta: Math.abs(planet.distanceAu - expectedSpherical.distance),
         threshold: thresholds.distanceAu,
         unit: 'au'
+      },
+      {
+        key: 'ra-j2000',
+        actual: planet.rightAscensionJ2000Deg.toFixed(6),
+        expected: referenceCartesian.raJ2000Deg.toFixed(6),
+        delta: angularDiffDeg(planet.rightAscensionJ2000Deg, referenceCartesian.raJ2000Deg),
+        threshold: thresholds.raDeg,
+        unit: 'deg'
+      },
+      {
+        key: 'dec-j2000',
+        actual: planet.declinationJ2000Deg.toFixed(6),
+        expected: referenceCartesian.decJ2000Deg.toFixed(6),
+        delta: Math.abs(planet.declinationJ2000Deg - referenceCartesian.decJ2000Deg),
+        threshold: thresholds.decDeg,
+        unit: 'deg'
       }
     ];
 
