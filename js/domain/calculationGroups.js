@@ -171,6 +171,50 @@ function buildAstrologyGroup(chart) {
   });
 }
 
+function buildFrameworksGroup(chart) {
+  const frameworks = chart.meta?.frameworks ?? {};
+
+  return createCalculationGroup({
+    key: 'frameworks',
+    title: 'Cadres de lecture',
+    category: 'frameworks',
+    items: [
+      entry({
+        key: 'framework-astronomy',
+        label: 'Astronomie',
+        value: 'mesure du ciel',
+        category: 'frameworks',
+        method: frameworks.astronomy?.summary ?? 'n/a',
+        usage: frameworks.astronomy?.scope ?? 'n/a'
+      }),
+      entry({
+        key: 'framework-tropical',
+        label: 'Astrologie tropicale',
+        value: frameworks.tropical?.defaultInApp ? 'lecture principale affichée' : 'lecture disponible',
+        category: 'frameworks',
+        method: frameworks.tropical?.summary ?? 'n/a',
+        usage: frameworks.tropical?.scope ?? 'n/a'
+      }),
+      entry({
+        key: 'framework-sidereal',
+        label: 'Astrologie sidérale',
+        value: ayanamsaLabel(chart.options?.ayanamsa),
+        category: 'frameworks',
+        method: frameworks.sidereal?.summary ?? 'n/a',
+        usage: frameworks.sidereal?.scope ?? 'n/a'
+      }),
+      entry({
+        key: 'framework-human-design',
+        label: 'Design humain',
+        value: 'partiel / non implémenté',
+        category: 'frameworks',
+        method: frameworks.humanDesign?.summary ?? 'n/a',
+        usage: frameworks.humanDesign?.scope ?? 'n/a'
+      })
+    ]
+  });
+}
+
 function buildLunarGroup(chart) {
   const phase = chart.moonPhase;
   const transition = chart.diagnostics?.moonConstellationTransition;
@@ -358,7 +402,7 @@ function buildMissingGroup() {
         value: 'non calcule',
         category: 'missing',
         method: 'Aucun moteur HD actif dans le depot.',
-        usage: 'Pas de bodygraph, type, autorite, profil, porte ou canal.'
+        usage: 'Pas de bodygraph, type, autorite, profil, centres, portes detaillees, lignes, couleurs, tons, bases ni calcul de design environ 88 jours avant naissance.'
       }),
       entry({
         key: 'polygon-constellations',
@@ -382,6 +426,7 @@ function buildMissingGroup() {
 
 export function buildCalculationGroups(chart) {
   return [
+    buildFrameworksGroup(chart),
     buildAstronomyGroup(chart),
     buildAstrologyGroup(chart),
     buildLunarGroup(chart),

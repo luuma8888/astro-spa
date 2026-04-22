@@ -4,10 +4,13 @@ export function initDashboardShell() {
   const backdrop = document.getElementById('shell-backdrop');
   const navToggle = document.getElementById('shell-nav-toggle');
   const currentViewLabel = document.getElementById('current-view-label');
-  const navLinks = [...document.querySelectorAll('[data-nav-target]')];
-  const sections = navLinks
-    .map((link) => document.getElementById(link.dataset.navTarget))
+  const navButtons = [...document.querySelectorAll('[data-nav-target]')];
+  const navLinks = [...document.querySelectorAll('[data-shell-nav][data-nav-target]')];
+  const sections = [...new Set(navButtons.map((link) => link.dataset.navTarget))]
+    .map((id) => document.getElementById(id))
     .filter(Boolean);
+
+  const sectionById = new Map(sections.map((section) => [section.id, section]));
 
   function closeSidebar() {
     body.classList.remove('sidebar-open');
@@ -22,10 +25,18 @@ export function initDashboardShell() {
       link.classList.toggle('is-active', link.dataset.navTarget === id);
     });
 
-    const activeSection = document.getElementById(id);
+    const activeSection = sectionById.get(id) ?? document.getElementById(id);
     if (activeSection && currentViewLabel) {
       currentViewLabel.textContent = activeSection.dataset.sectionLabel ?? activeSection.querySelector('h2, h1')?.textContent ?? 'Astro App';
     }
+  }
+
+  function navigateToSection(id) {
+    const target = sectionById.get(id) ?? document.getElementById(id);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActiveSection(id);
+    closeSidebar();
   }
 
   navToggle?.addEventListener('click', () => {
@@ -38,13 +49,9 @@ export function initDashboardShell() {
 
   backdrop?.addEventListener('click', closeSidebar);
 
-  navLinks.forEach((link) => {
+  navButtons.forEach((link) => {
     link.addEventListener('click', () => {
-      const target = document.getElementById(link.dataset.navTarget);
-      if (!target) return;
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setActiveSection(link.dataset.navTarget);
-      closeSidebar();
+      navigateToSection(link.dataset.navTarget);
     });
   });
 

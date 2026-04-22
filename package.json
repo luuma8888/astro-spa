@@ -8,6 +8,7 @@
     "generate:constellations:synthetic": "node ./tools/generate-synthetic-constellation-boundaries.mjs",
     "validate:constellations": "node ./tools/validate-constellations.mjs",
     "validate:precision": "node ./tools/validate-precision.mjs",
+    "validate:precision:planets": "node ./tools/validate-planet-precision.mjs",
     "diagnose:moon-phase": "node ./tools/diagnose-moon-phase.mjs"
   }
 }

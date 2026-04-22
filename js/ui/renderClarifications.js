@@ -18,6 +18,7 @@ export function renderClarifications(chart) {
   }
 
   const precision = chart?.meta?.precision;
+  const frameworks = chart?.meta?.frameworks ?? {};
   const policy = chart?.meta?.interpretationPolicy ?? [];
 
   function renderCard(title, lines) {
@@ -40,6 +41,12 @@ export function renderClarifications(chart) {
         `<strong>Base de contrôle</strong> : ${precision?.coreAstronomy?.evidence ?? 'n/a'}`,
         ...policy
       ])}
+      ${renderCard('Quatre lectures distinctes', [
+        `<strong>${frameworks?.astronomy?.title ?? 'Lecture astronomique'}</strong> : ${frameworks?.astronomy?.summary ?? 'n/a'}`,
+        `<strong>${frameworks?.tropical?.title ?? 'Lecture astrologique tropicale'}</strong> : ${frameworks?.tropical?.summary ?? 'n/a'}`,
+        `<strong>${frameworks?.sidereal?.title ?? 'Lecture astrologique sidérale'}</strong> : ${frameworks?.sidereal?.summary ?? 'n/a'}`,
+        `<strong>${frameworks?.humanDesign?.title ?? 'Repères utiles au design humain'}</strong> : ${frameworks?.humanDesign?.summary ?? 'n/a'}`
+      ])}
       ${renderCard('Astro technique', [
         '<strong>JD</strong> correspond au jour julien, base continue utilisée pour enchaîner les calculs astronomiques.',
         '<strong>LST</strong> correspond au temps sidéral local, utile surtout pour l’Ascendant, le MC et les maisons.',
@@ -49,6 +56,7 @@ export function renderClarifications(chart) {
       ${renderCard('Lecture astrologique', [
         '<strong>Signe tropical</strong> correspond à la position zodiacale saisonnière la plus utilisée en astrologie occidentale.',
         '<strong>Signe sidéral</strong> correspond à cette même position après correction par ayanamsa.',
+        '<strong>Constellation</strong> correspond ici à une zone astronomique IAU du ciel. Elle ne doit pas être confondue avec le signe tropical ni avec le signe sidéral.',
         `<strong>Maison</strong> correspond au secteur de vie où la position projetée du corps est lue dans le système choisi : ${chart.houseSystem}.`,
         '<strong>Aspect</strong> correspond à un écart angulaire entre deux points. Angle = séparation mesurée, orbe = écart par rapport à l’aspect exact.'
       ])}
@@ -60,7 +68,7 @@ export function renderClarifications(chart) {
       ])}
       ${renderCard('Symbolique', [
         '<strong>Hexagramme Y-King</strong> correspond ici à une correspondance symbolique dérivée de la longitude écliptique.',
-        '<strong>Human Design</strong> n’est pas encore calculé dans ce projet.'
+        '<strong>Human Design</strong> n’est pas encore calculé dans ce projet: pas de bodygraph, pas de centres, pas de canaux, pas de type, pas d’autorité, pas de profil, pas de calcul de design à ~88 jours.'
       ])}
     </div>
   `;

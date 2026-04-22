@@ -11,7 +11,7 @@ export function renderSymbolic(chart) {
     .join('');
   el.innerHTML = `
     <div class="section-block section-block-intro">
-      <p>Ce bloc montre une correspondance symbolique Y-King. Ce n’est pas un calcul Human Design.</p>
+      <p>Ce bloc montre une correspondance symbolique Y-King dérivée de la longitude. Ce n’est pas encore un moteur Human Design: pas de bodygraph, pas de centres, pas de canaux, pas de type, pas d’autorité, pas de profil.</p>
     </div>
     <div class="kv-grid">${entries}</div>
   `;

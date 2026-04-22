@@ -46,6 +46,25 @@ function renderTransitCompact(item) {
   `;
 }
 
+function renderTransitItem(item) {
+  return `
+    <article class="transit-item transit-${item.importance.replace(/\s+/g, '-')}">
+      <div class="transit-main">
+        <span class="transit-badge">${importanceBadge(item.importance)}</span>
+        <strong>${item.bodyA}</strong>
+        <span>${item.aspect}</span>
+        <strong>${item.bodyB}</strong>
+      </div>
+      <div class="transit-meta">
+        <span>orbe ${item.orb.toFixed(2)}°</span>
+        <span>intensité ${item.importance}</span>
+        <span>vitesse ${item.transitSpeedClass}</span>
+        <span>cible ${item.natalSpeedClass}</span>
+      </div>
+    </article>
+  `;
+}
+
 export function renderTransits(result, level = 'medium') {
   const el = document.getElementById('transits');
   if (!el) return;
@@ -96,22 +115,7 @@ export function renderTransits(result, level = 'medium') {
         <article class="synthesis-section">
           <h3>Transit dominants</h3>
           <div class="transit-list">
-            ${spotlightItems.map((item) => `
-              <article class="transit-item transit-${item.importance.replace(/\s+/g, '-')}">
-                <div class="transit-main">
-                  <span class="transit-badge">${importanceBadge(item.importance)}</span>
-                  <strong>${item.bodyA}</strong>
-                  <span>${item.aspect}</span>
-                  <strong>${item.bodyB}</strong>
-                </div>
-                <div class="transit-meta">
-                  <span>orbe ${item.orb.toFixed(2)}°</span>
-                  <span>intensité ${item.importance}</span>
-                  <span>vitesse ${item.transitSpeedClass}</span>
-                  <span>cible ${item.natalSpeedClass}</span>
-                </div>
-              </article>
-            `).join('')}
+            ${spotlightItems.map(renderTransitItem).join('')}
           </div>
         </article>
         <article class="synthesis-section transit-compact-panel">
@@ -121,27 +125,15 @@ export function renderTransits(result, level = 'medium') {
           </div>
         </article>
       </section>
-      <section class="synthesis-section">
-        <h3>Détail complet</h3>
+      <details class="compact-disclosure transit-disclosure" data-persist-key="panel:transits-detail">
+        <summary>
+          <span class="compact-disclosure-title">Détail complet</span>
+          <span class="compact-disclosure-meta">${detailedItems.length} transit(s) dans ce niveau de lecture</span>
+        </summary>
         <div class="transit-list">
-          ${detailedItems.map((item) => `
-            <article class="transit-item transit-${item.importance.replace(/\s+/g, '-')}">
-              <div class="transit-main">
-                <span class="transit-badge">${importanceBadge(item.importance)}</span>
-                <strong>${item.bodyA}</strong>
-                <span>${item.aspect}</span>
-                <strong>${item.bodyB}</strong>
-              </div>
-              <div class="transit-meta">
-                <span>orbe ${item.orb.toFixed(2)}°</span>
-                <span>intensité ${item.importance}</span>
-                <span>vitesse ${item.transitSpeedClass}</span>
-                <span>cible ${item.natalSpeedClass}</span>
-              </div>
-            </article>
-          `).join('')}
+          ${detailedItems.map(renderTransitItem).join('')}
         </div>
-      </section>
+      </details>
     </div>
   `;
 }

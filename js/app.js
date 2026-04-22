@@ -5,6 +5,7 @@ import { loadChart, saveChart } from './storage/localDb.js';
 import { exportJson, importJsonFile } from './storage/exportImport.js';
 import { loadSettings, saveSettings } from './storage/settings.js';
 import { renderSummary } from './ui/renderSummary.js';
+import { renderQuickScan } from './ui/renderQuickScan.js';
 import { renderClarifications } from './ui/renderClarifications.js';
 import { renderCalculationGroups } from './ui/renderCalculationGroups.js';
 import { renderBodies } from './ui/renderBodies.js';
@@ -23,6 +24,12 @@ import { uiState } from './ui/state.js';
 const MAIN_FORM_DRAFT_KEY = 'astro-app-main-form-draft';
 const TRANSIT_FORM_DRAFT_KEY = 'astro-app-transit-form-draft';
 const STORAGE_TEST_KEY = 'astro-app-storage-test';
+const DEFAULT_SETTINGS = {
+  houseSystem: 'porphyry',
+  ayanamsa: 'lahiri',
+  synthesisLevel: 'medium',
+  disclosureState: {}
+};
 const PROFILE_PRESETS = {
   western: {
     houseSystem: 'porphyry',
@@ -170,6 +177,158 @@ function getMainFormInput(form) {
 
 function normalizeSynthesisLevel(value) {
   return ['short', 'medium', 'long'].includes(value) ? value : 'medium';
+}
+
+function formatUtcOffset(offset) {
+  const value = Number(offset);
+  if (!Number.isFinite(value)) return 'UTC n/a';
+
+  const sign = value >= 0 ? '+' : '-';
+  const absolute = Math.abs(value);
+  const hours = Math.trunc(absolute);
+  const minutes = Math.round((absolute - hours) * 60);
+
+  return `UTC${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+function formatCoordinate(value, positiveLabel, negativeLabel) {
+  if (!Number.isFinite(value)) return 'n/a';
+  const direction = value >= 0 ? positiveLabel : negativeLabel;
+  return `${Math.abs(value).toFixed(4)}° ${direction}`;
+}
+
+function formatInputMoment(input) {
+  if (!input?.date || !input?.time) return 'Date et heure non renseignées';
+  const clock = String(input.time).slice(0, 5) || input.time;
+  return `${input.date} • ${clock} • ${formatUtcOffset(input.utcOffset)}`;
+}
+
+function formatInputDate(input) {
+  if (!input?.date) return 'non renseignée';
+  return input.date;
+}
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function updateTopbarDates(chart = uiState.currentChart, transitResult = uiState.currentTransitResult) {
+  const referenceInput = chart?.input ?? null;
+  const transitInput = transitResult?.transitChart?.input ?? null;
+
+  setText('topbar-reference-date', `Référence: ${formatInputDate(referenceInput)}`);
+  setText(
+    'topbar-transit-date',
+    transitInput?.date
+      ? `Transit: ${formatInputDate(transitInput)}`
+      : 'Transit: non renseigné'
+  );
+}
+
+function normalizeSettings(settings = {}) {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...settings,
+    disclosureState: settings?.disclosureState && typeof settings.disclosureState === 'object'
+      ? settings.disclosureState
+      : {}
+  };
+}
+
+function saveUiSettings(canUseStorage) {
+  if (!canUseStorage) return;
+
+  saveSettings(normalizeSettings({
+    ...(uiState.currentChart?.options ?? {}),
+    synthesisLevel: uiState.synthesisLevel,
+    disclosureState: uiState.disclosureState
+  }));
+}
+
+function applyDisclosureState(root = document, disclosureState = {}) {
+  const disclosures = root.querySelectorAll('details[data-persist-key]');
+  disclosures.forEach((detail) => {
+    const key = detail.dataset.persistKey;
+    if (!key) return;
+    if (Object.prototype.hasOwnProperty.call(disclosureState, key)) {
+      detail.open = Boolean(disclosureState[key]);
+    }
+  });
+}
+
+function bindDisclosurePersistence(root = document, canUseStorage = false) {
+  const disclosures = root.querySelectorAll('details[data-persist-key]');
+  disclosures.forEach((detail) => {
+    if (detail.dataset.persistBound === 'true') return;
+    detail.dataset.persistBound = 'true';
+    detail.addEventListener('toggle', () => {
+      const key = detail.dataset.persistKey;
+      if (!key) return;
+      uiState.disclosureState[key] = detail.open;
+      saveUiSettings(canUseStorage);
+    });
+  });
+}
+
+function updateHero(chart = uiState.currentChart, transitResult = uiState.currentTransitResult) {
+  updateTopbarDates(chart, transitResult);
+
+  if (!chart?.input) {
+    setText('hero-chart-title', 'Aucune carte calculée');
+    setText('hero-chart-meta', 'Calcule ou charge une carte pour afficher le contexte principal, le lieu, les réglages et les points saillants.');
+    setText('hero-reading-note', 'Le shell privilégie la consultation progressive: vue rapide, lecture interprétative, puis détails techniques.');
+    setText('hero-primary-reading', 'Tropicale + dashboard');
+    setText('hero-primary-reading-sub', 'Maisons, synthèse progressive et repères sidéraux comparatifs.');
+    setText('hero-precision', 'Mesure pragmatique élevée');
+    setText('hero-precision-sub', 'Le moteur local distingue mesure astronomique, lecture zodiacale et symbolique.');
+    setText('hero-lunar-focus', 'Phase non disponible');
+    setText('hero-lunar-focus-sub', 'La zone lunaire regroupe phase, visibilité, diagnostics et prochains événements.');
+    setText('hero-transit-focus', 'Aucun transit');
+    setText('hero-transit-focus-sub', 'Lance une comparaison pour afficher densité, intensité et lecture rapide des transits.');
+    setText('hero-method-note', 'Astronomie, tropical, sidéral, symbolique');
+    return;
+  }
+
+  const { input } = chart;
+  const sunSign = chart.bodies?.sun?.tropical?.name ?? 'n/a';
+  const moonSign = chart.bodies?.moon?.tropical?.name ?? 'n/a';
+  const ascSign = chart.bodies?.sun?.presentation?.houseText ? `Maison ${chart.bodies.sun.presentation.houseText}` : 'maison n/a';
+  const moonPhase = chart.moonPhase?.presentation?.labelText ?? chart.moonPhase?.label ?? 'n/a';
+  const moonConstellation = chart.moonPhase?.presentation?.currentConstellationTitleText ?? 'n/a';
+  const precisionLevel = chart.meta?.precision?.coreAstronomy?.level ?? 'n/a';
+  const precisionEvidence = chart.meta?.precision?.coreAstronomy?.evidence ?? 'Référence locale non précisée.';
+  const transitTotal = transitResult?.summary?.total ?? transitResult?.aspects?.length ?? 0;
+  const transitStrong = (transitResult?.summary?.tresFort ?? 0) + (transitResult?.summary?.fort ?? 0);
+
+  setText('hero-chart-title', `${sunSign} solaire, ${moonSign} lunaire`);
+  setText(
+    'hero-chart-meta',
+    `${formatInputMoment(input)} • ${formatCoordinate(input.latitude, 'N', 'S')} • ${formatCoordinate(input.longitude, 'E', 'W')} • ${input.timeZone ?? 'Fuseau n/a'}`
+  );
+  setText(
+    'hero-reading-note',
+    `Lecture principale en ${chart.houseSystem}, ayanamsa ${chart.options?.ayanamsa ?? 'lahiri'}. La constellation astronomique reste affichée comme repère distinct du signe.`
+  );
+  setText('hero-primary-reading', `${sunSign} / ${moonSign}`);
+  setText('hero-primary-reading-sub', `Dominante tropicale, comparaison sidérale disponible, ${ascSign} pour le Soleil.`);
+  setText('hero-precision', precisionLevel);
+  setText('hero-precision-sub', precisionEvidence);
+  setText('hero-lunar-focus', moonPhase);
+  setText('hero-lunar-focus-sub', `Constellation lunaire actuelle: ${moonConstellation}.`);
+
+  if (transitResult?.aspects?.length) {
+    setText('hero-transit-focus', `${transitTotal} transits retenus`);
+    setText('hero-transit-focus-sub', `${transitStrong} forts ou très forts dans ce niveau d’analyse.`);
+  } else {
+    setText('hero-transit-focus', 'Aucun transit');
+    setText('hero-transit-focus-sub', 'La comparaison reste vide tant qu’aucune date de transit n’est calculée.');
+  }
+
+  setText(
+    'hero-method-note',
+    `Astronomie mesurée, lecture tropicale principale, sidéral comparatif, symbolique séparée du moteur principal.`
+  );
 }
 
 function getTransitFormInput(form) {
@@ -474,6 +633,8 @@ function normalizeChartForUi(chart, inputFallback = null, optionsFallback = null
 function setStatus(message) {
   const el = document.getElementById('app-status');
   if (el) el.textContent = message;
+  const topbar = document.getElementById('topbar-status');
+  if (topbar) topbar.textContent = message;
 }
 
 function storageAvailable() {
@@ -558,6 +719,7 @@ function bindDraftPersistence(form, key, persistFn) {
 }
 
 function renderChart(chart) {
+  renderQuickScan(chart, uiState.currentTransitResult, uiState.synthesisLevel);
   renderSummary(chart);
   renderClarifications(chart);
   renderCalculationGroups(chart);
@@ -570,18 +732,27 @@ function renderChart(chart) {
   renderRiseSet(chart);
   renderChartWheel(chart);
   renderSynthesis(chart, uiState.synthesisLevel);
+  applyDisclosureState(document, uiState.disclosureState);
+  bindDisclosurePersistence(document, uiState.canUseStorage);
+  updateHero(chart, uiState.currentTransitResult);
 }
 
 function rerenderCurrentViews() {
   if (uiState.currentChart) {
     renderChart(uiState.currentChart);
+  } else {
+    renderQuickScan(null, uiState.currentTransitResult, uiState.synthesisLevel);
   }
 
   renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
+  applyDisclosureState(document, uiState.disclosureState);
+  bindDisclosurePersistence(document, uiState.canUseStorage);
+  updateHero(uiState.currentChart, uiState.currentTransitResult);
 }
 
 export function initApp() {
   initDashboardShell();
+  updateHero();
 
   const form = document.getElementById('chart-form');
   const transitForm = document.getElementById('transit-form');
@@ -593,7 +764,8 @@ export function initApp() {
   const importFile = document.getElementById('import-chart-file');
   const copyChartLocationButton = document.getElementById('copy-chart-location');
   const canUseStorage = storageAvailable();
-  const settings = canUseStorage ? loadSettings() : { houseSystem: 'porphyry', ayanamsa: 'lahiri', synthesisLevel: 'medium' };
+  uiState.canUseStorage = canUseStorage;
+  const settings = normalizeSettings(canUseStorage ? loadSettings() : DEFAULT_SETTINGS);
   const storedChart = canUseStorage ? loadChart() : null;
   const mainDraft = canUseStorage ? loadFormDraft(MAIN_FORM_DRAFT_KEY) : null;
   const transitDraft = canUseStorage ? loadFormDraft(TRANSIT_FORM_DRAFT_KEY) : null;
@@ -605,6 +777,7 @@ export function initApp() {
   syncUtcOffsetFromTimeZone(form, 'chart');
   syncUtcOffsetFromTimeZone(transitForm, 'transit');
   uiState.synthesisLevel = normalizeSynthesisLevel(settings.synthesisLevel);
+  uiState.disclosureState = settings.disclosureState ?? {};
   setProjectOptions(form, settings);
   updateFormSelectHelp(form, 'chart');
   updateProfileHelp(form?.elements?.profilePreset?.value ?? 'western');
@@ -618,7 +791,12 @@ export function initApp() {
     setStatus('Stockage local actif.');
   }
 
+  applyDisclosureState(document, uiState.disclosureState);
+  bindDisclosurePersistence(document, canUseStorage);
+
   renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
+  renderQuickScan(uiState.currentChart, uiState.currentTransitResult, uiState.synthesisLevel);
+  updateHero(uiState.currentChart, uiState.currentTransitResult);
 
   if (mainDraft?.input) {
     populateForm(form, mainDraft.input);
@@ -674,10 +852,7 @@ export function initApp() {
     uiState.synthesisLevel = normalizeSynthesisLevel(synthesisLevelSelect.value);
 
     if (canUseStorage) {
-      saveSettings({
-        ...(uiState.currentChart?.options ?? settings),
-        synthesisLevel: uiState.synthesisLevel
-      });
+      saveUiSettings(canUseStorage);
     }
 
     rerenderCurrentViews();
@@ -737,10 +912,7 @@ export function initApp() {
     uiState.currentInput = input;
     uiState.currentTransitResult = null;
     if (canUseStorage) {
-      saveSettings({
-        ...options,
-        synthesisLevel: uiState.synthesisLevel
-      });
+      saveUiSettings(canUseStorage);
       saveChart({
         chart,
         natalInput: input,
@@ -896,7 +1068,9 @@ export function initApp() {
     if (canUseStorage) {
       persistTransitFormDraft(transitForm);
     }
+    renderQuickScan(uiState.currentChart, result, uiState.synthesisLevel);
     renderTransits(result, uiState.synthesisLevel);
+    updateHero(uiState.currentChart, result);
     setStatus('Comparaison de transits calculée.');
   });
 
@@ -904,5 +1078,6 @@ export function initApp() {
     if (!canUseStorage) return;
     persistMainFormDraft(form);
     persistTransitFormDraft(transitForm);
+    saveUiSettings(canUseStorage);
   });
 }

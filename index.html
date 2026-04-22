@@ -17,13 +17,13 @@
       </div>
 
       <nav class="sidebar-nav" aria-label="Navigation principale">
-        <button type="button" class="nav-link is-active" data-nav-target="hero-section">Vue d'ensemble</button>
-        <button type="button" class="nav-link" data-nav-target="workspace-section">Pilotage</button>
-        <button type="button" class="nav-link" data-nav-target="interpretation-section">Lecture</button>
-        <button type="button" class="nav-link" data-nav-target="sky-section">Carte</button>
-        <button type="button" class="nav-link" data-nav-target="lunar-section">Lunaire</button>
-        <button type="button" class="nav-link" data-nav-target="transits-section">Transits</button>
-        <button type="button" class="nav-link" data-nav-target="advanced-section">Technique</button>
+        <button type="button" class="nav-link is-active" data-shell-nav data-nav-target="hero-section">Vue d'ensemble</button>
+        <button type="button" class="nav-link" data-shell-nav data-nav-target="workspace-section">Pilotage</button>
+        <button type="button" class="nav-link" data-shell-nav data-nav-target="interpretation-section">Lecture</button>
+        <button type="button" class="nav-link" data-shell-nav data-nav-target="sky-section">Carte</button>
+        <button type="button" class="nav-link" data-shell-nav data-nav-target="lunar-section">Lunaire</button>
+        <button type="button" class="nav-link" data-shell-nav data-nav-target="transits-section">Transits</button>
+        <button type="button" class="nav-link" data-shell-nav data-nav-target="advanced-section">Technique</button>
       </nav>
 
       <div class="sidebar-note">
@@ -37,43 +37,89 @@
         <div class="topbar-copy">
           <div class="topbar-eyebrow">Tableau de bord</div>
           <div id="current-view-label" class="topbar-title">Vue d'ensemble</div>
+          <div id="topbar-dates" class="topbar-dates" aria-live="polite">
+            <span id="topbar-reference-date" class="topbar-date-pill">Référence: non renseignée</span>
+            <span id="topbar-transit-date" class="topbar-date-pill topbar-date-pill-muted">Transit: non renseigné</span>
+          </div>
         </div>
         <div class="topbar-meta">
+          <span id="topbar-status" class="meta-chip meta-chip-status">initialisation</span>
           <span class="meta-chip">offline</span>
           <span class="meta-chip">local-first</span>
           <span class="meta-chip">spa</span>
         </div>
       </header>
 
+      <nav class="section-tabs" aria-label="Navigation de section">
+        <button type="button" class="section-tab is-active" data-shell-nav data-nav-target="hero-section">Vue</button>
+        <button type="button" class="section-tab" data-shell-nav data-nav-target="workspace-section">Pilotage</button>
+        <button type="button" class="section-tab" data-shell-nav data-nav-target="interpretation-section">Lecture</button>
+        <button type="button" class="section-tab" data-shell-nav data-nav-target="sky-section">Carte</button>
+        <button type="button" class="section-tab" data-shell-nav data-nav-target="lunar-section">Lunaire</button>
+        <button type="button" class="section-tab" data-shell-nav data-nav-target="transits-section">Transits</button>
+        <button type="button" class="section-tab" data-shell-nav data-nav-target="advanced-section">Technique</button>
+      </nav>
+
       <main class="dashboard">
         <section id="hero-section" class="dashboard-section hero-section" data-section-label="Vue d'ensemble">
           <div class="hero-card">
-            <div class="hero-copy">
-              <div class="section-kicker">Consultation</div>
-              <h1>Lire le thème sans se perdre dans les blocs</h1>
-              <p class="hero-lead">Cette interface doit permettre une lecture rapide d'abord, puis une exploration détaillée. Les calculs restent riches, mais l'affichage doit devenir hiérarchisé, compact et consultable sur desktop comme sur mobile.</p>
+            <div class="hero-head">
+              <div class="hero-copy">
+                <div class="section-kicker">Consultation</div>
+                <h1>Lire le thème sans se perdre dans les blocs</h1>
+                <p class="hero-lead">La page d’accueil doit maintenant servir de cockpit: lecture en 15 secondes, exploration guidée ensuite, détails experts seulement quand on les ouvre.</p>
+              </div>
+
+              <aside class="hero-identity">
+                <span class="hero-identity-label">Carte active</span>
+                <strong id="hero-chart-title">Aucune carte calculée</strong>
+                <p id="hero-chart-meta">Calcule ou charge une carte pour afficher le contexte principal, le lieu, les réglages et les points saillants.</p>
+                <p id="hero-reading-note" class="hero-reading-note">Le shell privilégie la consultation progressive: vue rapide, lecture interprétative, puis détails techniques.</p>
+              </aside>
             </div>
 
-            <div class="hero-grid">
+            <div class="hero-grid hero-metrics-grid">
               <div class="hero-stat">
-                <span class="hero-stat-label">Moteur</span>
-                <strong>Calculs avancés</strong>
-                <span class="hero-stat-sub">natal, transits, lunaire, symbolique</span>
+                <span class="hero-stat-label">Lecture principale</span>
+                <strong id="hero-primary-reading">Tropicale + dashboard</strong>
+                <span id="hero-primary-reading-sub" class="hero-stat-sub">Maisons, synthèse progressive et repères sidéraux comparatifs.</span>
               </div>
               <div class="hero-stat">
-                <span class="hero-stat-label">Constellations</span>
-                <strong>Roman87 exact</strong>
-                <span class="hero-stat-sub">précession B1875 prioritaire</span>
+                <span class="hero-stat-label">Précision</span>
+                <strong id="hero-precision">Mesure pragmatique élevée</strong>
+                <span id="hero-precision-sub" class="hero-stat-sub">Le moteur local distingue mesure astronomique, lecture zodiacale et symbolique.</span>
               </div>
               <div class="hero-stat">
-                <span class="hero-stat-label">Mode de lecture</span>
-                <strong>dashboard</strong>
-                <span class="hero-stat-sub">résumé, analyse, détail</span>
+                <span class="hero-stat-label">Lunaire</span>
+                <strong id="hero-lunar-focus">Phase non disponible</strong>
+                <span id="hero-lunar-focus-sub" class="hero-stat-sub">La zone lunaire regroupe phase, visibilité, diagnostics et prochains événements.</span>
               </div>
               <div class="hero-stat hero-status">
-                <span class="hero-stat-label">État local</span>
+                <span class="hero-stat-label">Comparaison</span>
+                <strong id="hero-transit-focus">Aucun transit</strong>
+                <span id="hero-transit-focus-sub" class="hero-stat-sub">Lance une comparaison pour afficher densité, intensité et lecture rapide des transits.</span>
+              </div>
+            </div>
+
+            <div class="hero-actions">
+              <button type="button" class="hero-action btn btn-primary" data-nav-target="workspace-section">Configurer la carte</button>
+              <button type="button" class="hero-action btn btn-secondary" data-nav-target="interpretation-section">Lire la synthèse</button>
+              <button type="button" class="hero-action btn btn-secondary" data-nav-target="sky-section">Ouvrir la carte</button>
+              <button type="button" class="hero-action btn btn-secondary" data-nav-target="transits-section">Comparer les transits</button>
+            </div>
+
+            <div class="hero-status-strip">
+              <div class="status-pill">
+                <span class="status-pill-label">État local</span>
                 <strong id="app-status">Initialisation...</strong>
-                <span class="hero-stat-sub">stockage, brouillons, carte courante</span>
+              </div>
+              <div class="status-pill">
+                <span class="status-pill-label">Méthode</span>
+                <strong id="hero-method-note">Astronomie, tropical, sidéral, symbolique</strong>
+              </div>
+              <div class="status-pill">
+                <span class="status-pill-label">Accès rapide</span>
+                <strong>Résumé, roue, Lune, transits, technique</strong>
               </div>
             </div>
           </div>
@@ -88,16 +134,66 @@
             <p class="section-intro">Les formulaires deviennent des panneaux de contrôle, séparés du reste de la lecture pour éviter d'écraser les résultats.</p>
           </div>
 
-          <div class="workspace-grid">
-            <section class="panel panel-control">
-              <div class="panel-heading">
-                <div>
-                  <h3>Carte de référence</h3>
-                  <p>Base de calcul du thème natal ou de la carte active.</p>
+          <div class="workspace-layout">
+            <aside class="workspace-rail">
+              <section class="panel panel-rail-card">
+                <div class="panel-heading">
+                  <div>
+                    <h3>Mode de travail</h3>
+                    <p>Le pilotage reste séparé de la lecture pour laisser l’écran principal aux résultats.</p>
+                  </div>
                 </div>
-              </div>
+                <div class="rail-list">
+                  <article class="rail-item">
+                    <span class="rail-index">01</span>
+                    <div>
+                      <strong>Configurer</strong>
+                      <p>Renseigner date, heure, lieu, fuseau, maisons et ayanamsa.</p>
+                    </div>
+                  </article>
+                  <article class="rail-item">
+                    <span class="rail-index">02</span>
+                    <div>
+                      <strong>Lire vite</strong>
+                      <p>Passer au résumé, à la synthèse et aux repères méthodologiques.</p>
+                    </div>
+                  </article>
+                  <article class="rail-item">
+                    <span class="rail-index">03</span>
+                    <div>
+                      <strong>Approfondir</strong>
+                      <p>Explorer roue, corps, Lune, transits puis couches techniques.</p>
+                    </div>
+                  </article>
+                </div>
+              </section>
 
-              <form id="chart-form" class="stack-form">
+              <section class="panel panel-rail-card panel-rail-accent">
+                <div class="panel-heading">
+                  <div>
+                    <h3>Raccourcis de lecture</h3>
+                    <p>Les zones les plus utiles sont accessibles sans remonter toute la page.</p>
+                  </div>
+                </div>
+                <div class="button-row">
+                  <button type="button" class="btn btn-secondary" data-nav-target="interpretation-section">Résumé</button>
+                  <button type="button" class="btn btn-secondary" data-nav-target="lunar-section">Lunaire</button>
+                  <button type="button" class="btn btn-secondary" data-nav-target="advanced-section">Technique</button>
+                </div>
+              </section>
+            </aside>
+
+            <div class="workspace-grid">
+              <details class="panel panel-control control-panel" data-persist-key="panel:chart-form" open>
+                <summary class="control-summary">
+                  <div>
+                    <span class="control-kicker">Carte</span>
+                    <h3>Carte de référence</h3>
+                    <p>Base de calcul du thème natal ou de la carte active.</p>
+                  </div>
+                </summary>
+
+                <form id="chart-form" class="stack-form control-form">
                 <div class="form-assistant">
                   <div class="form-assistant-head">
                     <h4>Assistant de configuration</h4>
@@ -178,18 +274,19 @@
                   <button type="button" id="import-chart-button" class="btn btn-secondary">Importer JSON</button>
                   <input type="file" id="import-chart-file" accept="application/json" hidden />
                 </div>
-              </form>
-            </section>
+                </form>
+              </details>
 
-            <section class="panel panel-control">
-              <div class="panel-heading">
-                <div>
-                  <h3>Transits / comparaison</h3>
-                  <p>Comparer la carte de référence à une date et un lieu de transit.</p>
-                </div>
-              </div>
+              <details class="panel panel-control control-panel" data-persist-key="panel:transit-form">
+                <summary class="control-summary">
+                  <div>
+                    <span class="control-kicker">Comparaison</span>
+                    <h3>Transits / comparaison</h3>
+                    <p>Comparer la carte de référence à une date et un lieu de transit.</p>
+                  </div>
+                </summary>
 
-              <form id="transit-form" class="stack-form">
+                <form id="transit-form" class="stack-form control-form">
                 <div class="form-assistant">
                   <div class="form-assistant-head">
                     <h4>Aide transit</h4>
@@ -255,8 +352,9 @@
                 <div class="button-row">
                   <button type="submit" class="btn btn-primary">Comparer</button>
                 </div>
-              </form>
-            </section>
+                </form>
+              </details>
+            </div>
           </div>
         </section>
 
@@ -268,6 +366,8 @@
             </div>
             <p class="section-intro">Les éléments à lire en premier doivent être regroupés en tête, avec un niveau de détail progressif.</p>
           </div>
+
+          <div id="quick-scan" class="quick-scan-grid"></div>
 
           <div class="overview-grid">
             <section class="panel panel-summary">
@@ -436,7 +536,7 @@
           </div>
 
           <div class="advanced-stack">
-            <details class="panel-disclosure">
+            <details class="panel-disclosure" data-persist-key="panel:calculation-groups">
               <summary>
                 <span>Familles de calcul</span>
                 <small>Organisation par catégories, méthodes et limites</small>
@@ -446,7 +546,7 @@
               </div>
             </details>
 
-            <details class="panel-disclosure">
+            <details class="panel-disclosure" data-persist-key="panel:symbolic">
               <summary>
                 <span>Symbolique</span>
                 <small>Couches complémentaires, non astronomiques</small>

@@ -23,6 +23,7 @@ Les constellations utilisent maintenant une couche exacte `Roman 1987` pour la d
 
 ## Vérifications utiles
 - `npm run validate:precision`
+- `npm run validate:precision:planets`
 - `npm run generate:constellations:synthetic`
 - `npm run validate:constellations`
 - `npm run convert:constellations`

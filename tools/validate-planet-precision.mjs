@@ -1,0 +1,118 @@
+import { buildChart } from '../js/domain/chartBuilder.js';
+import { PLANET_PRECISION_FIXTURES } from './planet-precision-fixtures.js';
+
+const PLANET_THRESHOLDS = {
+  Mercury: { cartesianAu: 0.0003, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.0002 },
+  Venus: { cartesianAu: 0.0003, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.0001 },
+  Mars: { cartesianAu: 0.0008, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.0002 },
+  Jupiter: { cartesianAu: 0.005, longitudeDeg: 0.03, latitudeDeg: 0.005, distanceAu: 0.004 },
+  Saturn: { cartesianAu: 0.02, longitudeDeg: 0.1, latitudeDeg: 0.005, distanceAu: 0.003 },
+  Uranus: { cartesianAu: 0.01, longitudeDeg: 0.01, latitudeDeg: 0.005, distanceAu: 0.008 },
+  Neptune: { cartesianAu: 0.01, longitudeDeg: 0.02, latitudeDeg: 0.005, distanceAu: 0.003 }
+};
+
+function angularDiffDeg(a, b) {
+  const raw = Math.abs(a - b) % 360;
+  return Math.min(raw, 360 - raw);
+}
+
+function rectToSpherical(x, y, z) {
+  const lon = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  const lat = Math.atan2(z, Math.sqrt(x * x + y * y)) * 180 / Math.PI;
+  const distance = Math.sqrt(x * x + y * y + z * z);
+
+  return { lon, lat, distance };
+}
+
+function printCheck(fixture, planetName, check) {
+  const status = check.delta <= check.threshold ? 'OK' : 'FAIL';
+  console.log(
+    `${status} ${fixture.id} ${planetName} ${check.key} | actual=${check.actual} expected=${check.expected} delta=${check.delta.toFixed(6)} ${check.unit} threshold=${check.threshold}`
+  );
+}
+
+let failureCount = 0;
+
+console.log('Validation de precision des planetes');
+console.log(`Fixtures: ${PLANET_PRECISION_FIXTURES.length}`);
+console.log('');
+
+for (const fixture of PLANET_PRECISION_FIXTURES) {
+  const chart = buildChart(fixture.input, {});
+  console.log(`${fixture.id} - ${fixture.label}`);
+  console.log(`source: ${fixture.source}`);
+
+  for (const [planetName, referenceCartesian] of Object.entries(fixture.reference)) {
+    const planet = chart.planets?.[planetName];
+    const thresholds = PLANET_THRESHOLDS[planetName];
+
+    if (!planet || !thresholds) {
+      console.log(`FAIL ${fixture.id} ${planetName} missing-data | actual=missing expected=present delta=1 threshold=0`);
+      failureCount += 1;
+      continue;
+    }
+
+    const expectedSpherical = rectToSpherical(
+      referenceCartesian.xAu,
+      referenceCartesian.yAu,
+      referenceCartesian.zAu
+    );
+    const actualCartesian = planet.geocentricCartesian;
+    const cartesianDelta = Math.sqrt(
+      (actualCartesian.xAu - referenceCartesian.xAu) ** 2
+      + (actualCartesian.yAu - referenceCartesian.yAu) ** 2
+      + (actualCartesian.zAu - referenceCartesian.zAu) ** 2
+    );
+
+    const checks = [
+      {
+        key: 'cartesian',
+        actual: `${actualCartesian.xAu.toFixed(9)},${actualCartesian.yAu.toFixed(9)},${actualCartesian.zAu.toFixed(9)}`,
+        expected: `${referenceCartesian.xAu.toFixed(9)},${referenceCartesian.yAu.toFixed(9)},${referenceCartesian.zAu.toFixed(9)}`,
+        delta: cartesianDelta,
+        threshold: thresholds.cartesianAu,
+        unit: 'au'
+      },
+      {
+        key: 'longitude',
+        actual: planet.longitudeDeg.toFixed(6),
+        expected: expectedSpherical.lon.toFixed(6),
+        delta: angularDiffDeg(planet.longitudeDeg, expectedSpherical.lon),
+        threshold: thresholds.longitudeDeg,
+        unit: 'deg'
+      },
+      {
+        key: 'latitude',
+        actual: planet.latitudeDeg.toFixed(6),
+        expected: expectedSpherical.lat.toFixed(6),
+        delta: Math.abs(planet.latitudeDeg - expectedSpherical.lat),
+        threshold: thresholds.latitudeDeg,
+        unit: 'deg'
+      },
+      {
+        key: 'distance',
+        actual: planet.distanceAu.toFixed(9),
+        expected: expectedSpherical.distance.toFixed(9),
+        delta: Math.abs(planet.distanceAu - expectedSpherical.distance),
+        threshold: thresholds.distanceAu,
+        unit: 'au'
+      }
+    ];
+
+    for (const check of checks) {
+      printCheck(fixture, planetName, check);
+      if (check.delta > check.threshold) {
+        failureCount += 1;
+      }
+    }
+  }
+
+  console.log('');
+}
+
+if (failureCount > 0) {
+  console.error(`Validation planetaire echouee: ${failureCount} verification(s) hors seuil.`);
+  process.exit(1);
+}
+
+console.log('Validation planetaire reussie: toutes les verifications sont dans les seuils.');

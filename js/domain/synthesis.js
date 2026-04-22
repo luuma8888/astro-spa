@@ -239,6 +239,7 @@ function summarizeRiseSet(chart) {
 
 function summarizeMethodBoundary(chart) {
   const precision = chart?.meta?.precision;
+  const frameworks = chart?.meta?.frameworks;
   const policy = chart?.meta?.interpretationPolicy ?? [];
   const lines = [];
 
@@ -252,6 +253,18 @@ function summarizeMethodBoundary(chart) {
 
   if (precision?.interpretation?.summary) {
     lines.push(`Traduction humaine: ${precision.interpretation.summary}`);
+  }
+
+  if (frameworks?.tropical?.summary) {
+    lines.push(`Lecture tropicale principale: ${frameworks.tropical.summary}`);
+  }
+
+  if (frameworks?.sidereal?.summary) {
+    lines.push(`Lecture sidérale comparative: ${frameworks.sidereal.summary}`);
+  }
+
+  if (frameworks?.humanDesign?.summary) {
+    lines.push(`Design humain: ${frameworks.humanDesign.summary}`);
   }
 
   if (policy[0]) {
@@ -319,6 +332,8 @@ function buildLongOverview(chart, dominants, rankedAspects) {
   if (dominants.topSigns.length > 1) {
     lines.push(`En arrière-plan, ${dominants.topSigns.slice(0, 2).map(([name]) => name).join(' puis ')} structurent la coloration générale.`);
   }
+
+  lines.push('Dans cette app, la lecture interprétative principale repose sur le zodiaque tropical; le signe sidéral est fourni comme comparaison, tandis que la constellation IAU reste un repère astronomique distinct.');
 
   return lines;
 }

@@ -307,6 +307,29 @@ export function createAspectPresentation(aspect) {
 
 export function createModelMeta() {
   return {
+    frameworks: {
+      astronomy: {
+        title: 'Lecture astronomique',
+        summary: 'Décrit des positions, angles, phases, constellations IAU, levers/couchers et événements orbitaux comme mesures du ciel, sans symbolique zodiacale.',
+        scope: 'JD, LST, obliquité, RA/Dec, constellations, phase, illumination, rise/set, nœuds, périgée, apogée.'
+      },
+      tropical: {
+        title: 'Lecture astrologique tropicale',
+        summary: 'Projette les longitudes sur le zodiaque saisonnier de 12 signes de 30°, indépendamment des constellations visibles.',
+        scope: 'Soleil, Lune, planètes, signes tropicaux, maisons, angles et aspects.',
+        defaultInApp: true
+      },
+      sidereal: {
+        title: 'Lecture astrologique sidérale',
+        summary: 'Part de la même longitude écliptique mais applique un ayanamsa pour produire un zodiaque sidéral; ce n’est pas la même chose qu’une constellation IAU.',
+        scope: 'Signes sidéraux dérivés de l ayanamsa choisi, affichés comme lecture comparative.'
+      },
+      humanDesign: {
+        title: 'Repères utiles au design humain',
+        summary: 'Le projet ne calcule pas encore un vrai bodygraph Human Design. Il affiche seulement des correspondances symboliques partielles à partir de longitudes.',
+        scope: 'Hexagrammes Y-King simplifiés. Pas de calcul des portes complètes, lignes, profils, type, autorité, centres, canaux ni date de design ~88 jours avant naissance.'
+      }
+    },
     precision: {
       coreAstronomy: {
         level: 'élevée pragmatique',
@@ -327,6 +350,9 @@ export function createModelMeta() {
     interpretationPolicy: [
       'Mesure brute: valeur astronomique ou géométrique calculée directement.',
       'Lecture dérivée: signe, maison, aspect ou phase construits à partir des mesures brutes.',
+      'Lecture tropicale: zodiaque saisonnier de 12 signes égaux, distinct des constellations astronomiques.',
+      'Lecture sidérale: même base géométrique, mais décalée par ayanamsa; elle n est pas identique aux frontières IAU.',
+      'Human Design: non implémenté comme système autonome; les correspondances symboliques affichées ne suffisent pas à produire un bodygraph.',
       'Traduction humaine: reformulation astrologique destinée à être compréhensible, sans prétention de mesure.'
     ]
   };
