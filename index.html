@@ -22,6 +22,7 @@
         <button type="button" class="nav-link" data-shell-nav data-nav-target="interpretation-section">Lecture</button>
         <button type="button" class="nav-link" data-shell-nav data-nav-target="sky-section">Carte</button>
         <button type="button" class="nav-link" data-shell-nav data-nav-target="lunar-section">Lunaire</button>
+        <button type="button" class="nav-link" data-shell-nav data-nav-target="human-design-section">Design Humain</button>
         <button type="button" class="nav-link" data-shell-nav data-nav-target="transits-section">Transits</button>
         <button type="button" class="nav-link" data-shell-nav data-nav-target="advanced-section">Technique</button>
       </nav>
@@ -56,6 +57,7 @@
         <button type="button" class="section-tab" data-shell-nav data-nav-target="interpretation-section">Lecture</button>
         <button type="button" class="section-tab" data-shell-nav data-nav-target="sky-section">Carte</button>
         <button type="button" class="section-tab" data-shell-nav data-nav-target="lunar-section">Lunaire</button>
+        <button type="button" class="section-tab" data-shell-nav data-nav-target="human-design-section">HD</button>
         <button type="button" class="section-tab" data-shell-nav data-nav-target="transits-section">Transits</button>
         <button type="button" class="section-tab" data-shell-nav data-nav-target="advanced-section">Technique</button>
       </nav>
@@ -105,6 +107,7 @@
               <button type="button" class="hero-action btn btn-primary" data-nav-target="workspace-section">Configurer la carte</button>
               <button type="button" class="hero-action btn btn-secondary" data-nav-target="interpretation-section">Lire la synthèse</button>
               <button type="button" class="hero-action btn btn-secondary" data-nav-target="sky-section">Ouvrir la carte</button>
+              <button type="button" class="hero-action btn btn-secondary" data-nav-target="human-design-section">Voir le Design Humain</button>
               <button type="button" class="hero-action btn btn-secondary" data-nav-target="transits-section">Comparer les transits</button>
             </div>
 
@@ -148,7 +151,7 @@
                     <span class="rail-index">01</span>
                     <div>
                       <strong>Configurer</strong>
-                      <p>Renseigner date, heure, lieu, fuseau, maisons et ayanamsa.</p>
+                      <p>Renseigner naissance, lieu et fuseau. Le reste est calculé et organisé ensuite.</p>
                     </div>
                   </article>
                   <article class="rail-item">
@@ -178,6 +181,7 @@
                 <div class="button-row">
                   <button type="button" class="btn btn-secondary" data-nav-target="interpretation-section">Résumé</button>
                   <button type="button" class="btn btn-secondary" data-nav-target="lunar-section">Lunaire</button>
+                  <button type="button" class="btn btn-secondary" data-nav-target="human-design-section">Design Humain</button>
                   <button type="button" class="btn btn-secondary" data-nav-target="advanced-section">Technique</button>
                 </div>
               </section>
@@ -196,28 +200,16 @@
                 <form id="chart-form" class="stack-form control-form">
                 <div class="form-assistant">
                   <div class="form-assistant-head">
-                    <h4>Assistant de configuration</h4>
-                    <p>Choisis d’abord l’objectif de lecture, puis ajuste si besoin.</p>
-                  </div>
-                  <div class="form-grid two-cols">
-                    <label>
-                      Je veux surtout
-                      <select name="profilePreset">
-                        <option value="western" selected>Un thème astral occidental</option>
-                        <option value="vedic">Un thème védique / sidéral</option>
-                        <option value="human-design">Des repères utiles pour design humain</option>
-                        <option value="astronomy">Des données surtout astronomiques</option>
-                      </select>
-                    </label>
-                    <div id="chart-profile-help" class="field-help"></div>
+                    <h4>Entrée minimale</h4>
+                    <p>Le formulaire demande seulement la naissance, le lieu et le fuseau. Les variantes occidentale, sidérale, lunaire, astronomique et Design Humain s’affichent ensuite de manière organisée.</p>
                   </div>
                 </div>
 
                 <div class="form-grid two-cols">
                   <label class="full-span">
-                    Ville rapide
+                    Lieu
                     <select name="cityPreset">
-                      <option value="">Choisir une ville pour préremplir</option>
+                      <option value="" selected>Choisir une ville</option>
                       <option value="paris">Paris</option>
                       <option value="lyon">Lyon</option>
                       <option value="marseille">Marseille</option>
@@ -228,14 +220,10 @@
                       <option value="londres">Londres</option>
                       <option value="tokyo">Tokyo</option>
                     </select>
+                    <small id="chart-place-help" class="field-help inline-help">Le lieu remplit automatiquement latitude, longitude et fuseau conseillé.</small>
                   </label>
-                </div>
-
-                <div class="form-grid two-cols">
-                  <label>Date <input type="date" name="date" required /></label>
-                  <label>Heure <input type="time" name="time" step="1" required /></label>
-                  <label>Latitude <input type="number" name="latitude" step="0.000001" required /></label>
-                  <label>Longitude <input type="number" name="longitude" step="0.000001" required /></label>
+                  <label>Date de naissance <input type="date" name="date" required /></label>
+                  <label>Heure de naissance <input type="time" name="time" step="1" required /></label>
                   <label>
                     Fuseau horaire
                     <select name="timeZone" required></select>
@@ -244,27 +232,22 @@
                   <label>
                     UTC calculé
                     <select name="utcOffset" required></select>
-                    <small id="chart-utc-help" class="field-help inline-help">Mis à jour automatiquement selon la ville, le fuseau et la date.</small>
-                  </label>
-                  <label>
-                    Système de maisons
-                    <select name="houseSystem">
-                      <option value="porphyry" selected>Porphyry</option>
-                      <option value="equal">Maisons égales</option>
-                      <option value="whole-sign">Whole Sign</option>
-                    </select>
-                    <small id="chart-house-help" class="field-help inline-help"></small>
-                  </label>
-                  <label class="full-span">
-                    Ayanamsa
-                    <select name="ayanamsa">
-                      <option value="lahiri" selected>Lahiri</option>
-                      <option value="faganBradley">Fagan-Bradley</option>
-                      <option value="krishnamurti">Krishnamurti</option>
-                    </select>
-                    <small id="chart-ayanamsa-help" class="field-help inline-help"></small>
+                    <small id="chart-utc-help" class="field-help inline-help">Mis à jour automatiquement selon le lieu, le fuseau et la date.</small>
                   </label>
                 </div>
+
+                <details class="panel-disclosure" data-persist-key="panel:chart-advanced">
+                  <summary>
+                    <span>Saisie avancée</span>
+                    <small>Coordonnées manuelles si la ville n’est pas dans la liste</small>
+                  </summary>
+                  <div class="disclosure-body">
+                    <div class="form-grid two-cols">
+                      <label>Latitude <input type="number" name="latitude" step="0.000001" required /></label>
+                      <label>Longitude <input type="number" name="longitude" step="0.000001" required /></label>
+                    </div>
+                  </div>
+                </details>
 
                 <div class="button-row">
                   <button type="submit" class="btn btn-primary">Calculer</button>
@@ -416,7 +399,7 @@
               <div class="section-kicker">Carte</div>
               <h2>Structure du thème et géométrie céleste</h2>
             </div>
-            <p class="section-intro">Le cœur de consultation visuelle: roue, corps, maisons et aspects doivent être lisibles sans mur de texte.</p>
+            <p class="section-intro">Le cœur de consultation visuelle: roue, corps et aspects dans la zone principale. Les cuspides détaillées sont reléguées plus bas en section technique.</p>
           </div>
 
           <div class="sky-grid">
@@ -440,16 +423,6 @@
                 </div>
               </div>
               <div id="bodies" class="content-stack dense-copy bodies-grid"></div>
-            </section>
-
-            <section class="panel panel-houses">
-              <div class="panel-heading">
-                <div>
-                  <h3>Maisons</h3>
-                  <p>Découpage spatial du thème dans le système choisi.</p>
-                </div>
-              </div>
-              <div id="houses" class="content-stack compact-copy"></div>
             </section>
 
             <section class="panel panel-aspects">
@@ -522,7 +495,27 @@
                 <p>Synthèse, répartition et détail des aspects transitaires.</p>
               </div>
             </div>
-            <div id="transits" class="content-stack compact-copy"></div>
+              <div id="transits" class="content-stack compact-copy"></div>
+          </section>
+        </section>
+
+        <section id="human-design-section" class="dashboard-section" data-section-label="Design Humain">
+          <div class="section-heading">
+            <div>
+              <div class="section-kicker">Design Humain</div>
+              <h2>Calculs conscients et inconscients</h2>
+            </div>
+            <p class="section-intro">Accès direct aux portes, lignes, couleurs, tons, bases et à la date de design, sans bodygraph.</p>
+          </div>
+
+          <section class="panel panel-featured">
+            <div class="panel-heading">
+              <div>
+                <h3>Tableau Design Humain</h3>
+                <p>Noir pour le conscient, rouge pour l’inconscient, avec détail par corps céleste.</p>
+              </div>
+            </div>
+            <div id="symbolic" class="content-stack compact-copy"></div>
           </section>
         </section>
 
@@ -545,14 +538,13 @@
                 <div id="calculation-groups" class="content-stack compact-copy"></div>
               </div>
             </details>
-
-            <details class="panel-disclosure" data-persist-key="panel:symbolic">
+            <details class="panel-disclosure" data-persist-key="panel:houses">
               <summary>
-                <span>Symbolique</span>
-                <small>Couches complémentaires, non astronomiques</small>
+                <span>Maisons et cuspides</span>
+                <small>Découpage spatial détaillé, en second niveau</small>
               </summary>
               <div class="panel disclosure-body">
-                <div id="symbolic" class="content-stack compact-copy"></div>
+                <div id="houses" class="content-stack compact-copy"></div>
               </div>
             </details>
           </div>

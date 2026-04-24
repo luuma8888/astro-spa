@@ -6,9 +6,15 @@
     "convert:constellations": "node ./tools/convert-constellation-boundaries.js",
     "convert:constellations:roman87": "node ./tools/convert-constellation-roman87.js",
     "generate:constellations:synthetic": "node ./tools/generate-synthetic-constellation-boundaries.mjs",
+    "test": "node --test ./tests/*.test.mjs",
+    "test:planets": "node --test ./tests/planet-precision.test.mjs",
+    "validate:human-design": "node ./tools/validate-human-design-profiles.mjs",
     "validate:constellations": "node ./tools/validate-constellations.mjs",
     "validate:precision": "node ./tools/validate-precision.mjs",
     "validate:precision:planets": "node ./tools/validate-planet-precision.mjs",
     "diagnose:moon-phase": "node ./tools/diagnose-moon-phase.mjs"
+  },
+  "dependencies": {
+    "swisseph-v2": "^1.0.4"
   }
 }

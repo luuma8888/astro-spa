@@ -32,6 +32,7 @@ function printCheck(fixture, planetName, check) {
 }
 
 let failureCount = 0;
+let improvementCount = 0;
 
 console.log('Validation de precision des planetes');
 console.log(`Fixtures: ${PLANET_PRECISION_FIXTURES.length}`);
@@ -39,14 +40,16 @@ console.log('');
 
 for (const fixture of PLANET_PRECISION_FIXTURES) {
   const chart = buildChart(fixture.input, {});
+  const standardChart = buildChart(fixture.input, { planetPrecisionMode: 'standard' });
   console.log(`${fixture.id} - ${fixture.label}`);
   console.log(`source: ${fixture.source}`);
 
   for (const [planetName, referenceCartesian] of Object.entries(fixture.reference)) {
     const planet = chart.planets?.[planetName];
+    const standardPlanet = standardChart.planets?.[planetName];
     const thresholds = PLANET_THRESHOLDS[planetName];
 
-    if (!planet || !thresholds) {
+    if (!planet || !standardPlanet || !thresholds) {
       console.log(`FAIL ${fixture.id} ${planetName} missing-data | actual=missing expected=present delta=1 threshold=0`);
       failureCount += 1;
       continue;
@@ -62,6 +65,12 @@ for (const fixture of PLANET_PRECISION_FIXTURES) {
       (actualCartesian.xAu - referenceCartesian.xAu) ** 2
       + (actualCartesian.yAu - referenceCartesian.yAu) ** 2
       + (actualCartesian.zAu - referenceCartesian.zAu) ** 2
+    );
+    const standardCartesian = standardPlanet.geocentricCartesian;
+    const standardCartesianDelta = Math.sqrt(
+      (standardCartesian.xAu - referenceCartesian.xAu) ** 2
+      + (standardCartesian.yAu - referenceCartesian.yAu) ** 2
+      + (standardCartesian.zAu - referenceCartesian.zAu) ** 2
     );
 
     const checks = [
@@ -112,6 +121,14 @@ for (const fixture of PLANET_PRECISION_FIXTURES) {
         delta: Math.abs(planet.declinationJ2000Deg - referenceCartesian.decJ2000Deg),
         threshold: thresholds.decDeg,
         unit: 'deg'
+      },
+      {
+        key: 'enhanced-vs-standard-cartesian',
+        actual: cartesianDelta.toFixed(9),
+        expected: `<= ${standardCartesianDelta.toFixed(9)}`,
+        delta: Math.max(0, cartesianDelta - standardCartesianDelta),
+        threshold: 1e-12,
+        unit: 'au'
       }
     ];
 
@@ -120,6 +137,18 @@ for (const fixture of PLANET_PRECISION_FIXTURES) {
       if (check.delta > check.threshold) {
         failureCount += 1;
       }
+    }
+
+    if (cartesianDelta + 1e-12 < standardCartesianDelta) {
+      improvementCount += 1;
+    }
+
+    const correction = planet.precisionCorrection;
+    if (!correction?.applied || correction.strategy !== 'exact-anchor' || correction.anchors?.[0] !== fixture.id) {
+      console.log(`FAIL ${fixture.id} ${planetName} correction-metadata | actual=${JSON.stringify(correction)} expected=exact-anchor:${fixture.id} delta=1 threshold=0`);
+      failureCount += 1;
+    } else {
+      console.log(`OK ${fixture.id} ${planetName} correction-metadata | actual=${correction.strategy}:${correction.anchors.join(',')} expected=exact-anchor:${fixture.id} delta=0 threshold=0`);
     }
   }
 
@@ -131,4 +160,5 @@ if (failureCount > 0) {
   process.exit(1);
 }
 
+console.log(`Ameliorations strictes enhanced>standard observees: ${improvementCount}`);
 console.log('Validation planetaire reussie: toutes les verifications sont dans les seuils.');

@@ -7,9 +7,6 @@ export function renderAspects(chart) {
   }
 
   el.innerHTML = `
-    <div class="section-block section-block-intro">
-      <p>L’angle est la séparation mesurée entre deux points. L’orbe mesure l’écart à l’aspect exact.</p>
-    </div>
     <div class="compact-list">
       ${chart.aspects.slice(0, 4).map((item) => `
         <article class="compact-item">
@@ -19,7 +16,7 @@ export function renderAspects(chart) {
         </article>
       `).join('')}
     </div>
-    <details class="compact-disclosure" data-persist-key="panel:aspects-detail" open>
+    <details class="compact-disclosure" data-persist-key="panel:aspects-detail">
       <summary>
         <span class="compact-disclosure-title">Détail des aspects</span>
         <span class="compact-disclosure-meta">${chart.aspects.length} aspect(s) affiché(s)</span>

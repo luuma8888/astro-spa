@@ -14,20 +14,15 @@ function getAscSignName(chart) {
 
 function countDominants(chart) {
   const signCounts = new Map();
-  const houseCounts = new Map();
   const bodies = [chart?.bodies?.sun, chart?.bodies?.moon, ...Object.values(chart?.planets ?? {})].filter(Boolean);
 
   for (const body of bodies) {
     const sign = body?.tropical?.name;
-    const house = body?.house;
-
     if (sign) signCounts.set(sign, (signCounts.get(sign) ?? 0) + 1);
-    if (house != null) houseCounts.set(house, (houseCounts.get(house) ?? 0) + 1);
   }
 
   return {
-    signs: [...signCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2),
-    houses: [...houseCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2)
+    signs: [...signCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2)
   };
 }
 
@@ -88,7 +83,7 @@ export function renderQuickScan(chart, transitResult = null, level = 'medium') {
       'Lecture immediate',
       `${sun?.tropical?.name ?? 'n/a'} / ${moon?.tropical?.name ?? 'n/a'} / Asc ${getAscSignName(chart)}`,
       [
-        `Soleil en maison ${sun?.house ?? 'n/a'}, Lune en maison ${moon?.house ?? 'n/a'}.`,
+        `Date ${chart.input?.date ?? 'n/a'} • ${(chart.input?.time ?? 'n/a').slice(0, 5)} • ${chart.input?.timeZone ?? 'n/a'}.`,
         getOverviewLine(chart, level)
       ],
       'quick-card-featured'
@@ -97,10 +92,8 @@ export function renderQuickScan(chart, transitResult = null, level = 'medium') {
       'Dominantes',
       dominants.signs.length ? dominants.signs.map(([name, count]) => `${name} (${count})`).join(' • ') : 'Dominantes indisponibles',
       [
-        dominants.houses.length
-          ? `Maisons dominantes: ${dominants.houses.map(([house, count]) => `${house} (${count})`).join(' • ')}.`
-          : 'Maisons dominantes indisponibles.',
-        'Repere utile pour voir ou la carte se concentre avant de lire tout le detail.'
+        `Ascendant ${getAscSignName(chart)} • Soleil ${sun?.tropical?.name ?? 'n/a'} • Lune ${moon?.tropical?.name ?? 'n/a'}.`,
+        'Repère utile pour voir la tonalité générale avant les tableaux détaillés des corps et du Design Humain.'
       ]
     ),
     renderCard(
@@ -124,11 +117,11 @@ export function renderQuickScan(chart, transitResult = null, level = 'medium') {
       ]
     ),
     renderCard(
-      'Cadre de calcul',
-      `${chart.houseSystem} • ${chart.options?.ayanamsa ?? 'lahiri'}`,
+      'Variantes disponibles',
+      'Occidental • Sidéral • Astronomie • HD',
       [
-        `Precision annoncée: ${precision}.`,
-        'L app separe mesure astronomique, lecture tropicale, comparaison siderale et symbolique.'
+        `Précision annoncée: ${precision}.`,
+        'Une seule saisie alimente plusieurs lectures, organisées par section au lieu de dupliquer partout les mêmes données.'
       ]
     ),
     renderCard(

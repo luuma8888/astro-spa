@@ -7,6 +7,8 @@ Mesurer l'ecart entre le moteur local et des references officielles sur quelques
 ## Commande
 
 ```bash
+npm test
+npm run test:planets
 npm run validate:precision
 npm run validate:precision:planets
 ```
@@ -50,6 +52,8 @@ Documentation API:
 - derivees associees sur longitude, latitude et distance geocentriques
 - ecart planetaire officiel Horizons sur `RA/Dec J2000` pour Mercure, Venus, Mars, Jupiter, Saturne, Uranus et Neptune
 - bon branchement du mode `enhanced` sur les ancrages versionnes Horizons
+- non-regression du mode `enhanced` face au mode `standard` sur chaque ancrage
+- repli explicite hors couverture des ancrages, sans correction appliquee
 
 ## Seuils actuels
 
@@ -71,6 +75,12 @@ Les 8 snapshots planetaires versionnes couvrent actuellement:
 - 2034-03-20 12:00 UTC
 
 Ces seuils sont pragmatiques. Ils sont suffisants pour detecter une regression numerique importante, mais pas pour certifier une precision d'almanach officiel.
+
+La suite `node:test` ajoute en plus trois garanties structurelles:
+
+- reproduction exacte des vecteurs geocentriques sur chaque ancrage Horizons versionne
+- verification que `enhanced` n'est jamais moins precis que `standard` sur les ancrages
+- verification du comportement hors plage couverte, avec repli propre sur le modele standard
 
 ## Limites
 

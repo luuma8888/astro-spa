@@ -206,7 +206,7 @@ function buildFrameworksGroup(chart) {
       entry({
         key: 'framework-human-design',
         label: 'Design humain',
-        value: 'partiel / non implémenté',
+        value: chart.humanDesign ? 'actif partiel' : 'partiel / non implémenté',
         category: 'frameworks',
         method: frameworks.humanDesign?.summary ?? 'n/a',
         usage: frameworks.humanDesign?.scope ?? 'n/a'
@@ -390,6 +390,96 @@ function buildSymbolicGroup(chart) {
   });
 }
 
+function buildHumanDesignGroup(chart) {
+  const hd = chart.humanDesign;
+  if (!hd) return null;
+
+  const personalitySun = hd.personality?.Sun;
+  const designSun = hd.design?.Sun;
+  const personalityEarth = hd.personality?.Earth;
+  const designEarth = hd.design?.Earth;
+
+  return createCalculationGroup({
+    key: 'human-design',
+    title: 'Human Design',
+    category: 'symbolic',
+    items: [
+      entry({
+        key: 'human-design-design-date',
+        label: 'Date de design',
+        value: hd.designUtcIso,
+        category: 'symbolic',
+        method: 'Recherche inverse du point où le Soleil est 88° en amont de la naissance.',
+        usage: 'Base des activations inconscientes.'
+      }),
+      entry({
+        key: 'human-design-design-age',
+        label: 'Ecart naissance-design',
+        value: `${hd.designAgeDays.toFixed(3)} jours`,
+        category: 'symbolic',
+        method: 'Différence entre JD natal et JD de design.',
+        usage: 'Mesure l’écart temporel du design.'
+      }),
+      entry({
+        key: 'human-design-solar-arc',
+        label: 'Arc solaire réel',
+        value: `${hd.solarArcActualDeg.toFixed(6)}°`,
+        category: 'symbolic',
+        method: 'Écart exact entre Soleil natal et Soleil de design.',
+        usage: 'Vérifie le calage effectif de la recherche de design.'
+      }),
+      entry({
+        key: 'human-design-profile',
+        label: 'Profil',
+        value: hd.profile ?? 'n/a',
+        category: 'symbolic',
+        method: 'Ligne du Soleil conscient / ligne du Soleil inconscient.',
+        usage: 'Donne la structure de profil de base sans bodygraph.'
+      }),
+      entry({
+        key: 'human-design-personality-sun',
+        label: 'Soleil conscient',
+        value: personalitySun ? `${personalitySun.gate}.${personalitySun.line} c${personalitySun.color} t${personalitySun.tone} b${personalitySun.base}` : 'n/a',
+        category: 'symbolic',
+        method: 'Projection longitudinale sur la Rave Mandala.',
+        usage: 'Activation principale de personnalité.'
+      }),
+      entry({
+        key: 'human-design-design-sun',
+        label: 'Soleil inconscient',
+        value: designSun ? `${designSun.gate}.${designSun.line} c${designSun.color} t${designSun.tone} b${designSun.base}` : 'n/a',
+        category: 'symbolic',
+        method: 'Projection à la date de design.',
+        usage: 'Activation principale du design.'
+      }),
+      entry({
+        key: 'human-design-personality-earth',
+        label: 'Terre consciente',
+        value: personalityEarth ? `${personalityEarth.gate}.${personalityEarth.line} c${personalityEarth.color} t${personalityEarth.tone} b${personalityEarth.base}` : 'n/a',
+        category: 'symbolic',
+        method: 'Opposition exacte du Soleil natal.',
+        usage: 'Ancrage complémentaire de la personnalité.'
+      }),
+      entry({
+        key: 'human-design-design-earth',
+        label: 'Terre inconsciente',
+        value: designEarth ? `${designEarth.gate}.${designEarth.line} c${designEarth.color} t${designEarth.tone} b${designEarth.base}` : 'n/a',
+        category: 'symbolic',
+        method: 'Opposition exacte du Soleil de design.',
+        usage: 'Ancrage complémentaire du design.'
+      }),
+      entry({
+        key: 'human-design-missing-bodies',
+        label: 'Corps absents',
+        value: hd.missingBodies?.join(', ') || 'aucun',
+        category: 'symbolic',
+        method: 'Comparaison au set standard du Design Humain.',
+        usage: 'Repère les corps encore manquants dans le moteur.'
+      })
+    ]
+  });
+}
+
 function buildMissingGroup() {
   return createCalculationGroup({
     key: 'missing',
@@ -398,11 +488,11 @@ function buildMissingGroup() {
     items: [
       entry({
         key: 'human-design',
-        label: 'Human Design',
-        value: 'non calcule',
+        label: 'Human Design avance',
+        value: 'partiellement calcule',
         category: 'missing',
-        method: 'Aucun moteur HD actif dans le depot.',
-        usage: 'Pas de bodygraph, type, autorite, profil, centres, portes detaillees, lignes, couleurs, tons, bases ni calcul de design environ 88 jours avant naissance.'
+        method: 'Le moteur calcule design date et activations planetaires, mais pas encore la logique complète du bodygraph.',
+        usage: 'Restent à ajouter centres, canaux, définition, type, autorité, profil, croix d’incarnation et Pluto.'
       }),
       entry({
         key: 'polygon-constellations',
@@ -431,6 +521,7 @@ export function buildCalculationGroups(chart) {
     buildAstrologyGroup(chart),
     buildLunarGroup(chart),
     buildSymbolicGroup(chart),
+    buildHumanDesignGroup(chart),
     buildMissingGroup()
-  ];
+  ].filter(Boolean);
 }

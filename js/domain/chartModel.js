@@ -326,8 +326,8 @@ export function createModelMeta() {
       },
       humanDesign: {
         title: 'Repères utiles au design humain',
-        summary: 'Le projet ne calcule pas encore un vrai bodygraph Human Design. Il affiche seulement des correspondances symboliques partielles à partir de longitudes.',
-        scope: 'Hexagrammes Y-King simplifiés. Pas de calcul des portes complètes, lignes, profils, type, autorité, centres, canaux ni date de design ~88 jours avant naissance.'
+        summary: 'Calcule les activations Human Design de base a partir de longitudes Swiss Ephemeris: date de design, activations conscientes/inconscientes, portes, lignes, couleurs, tons et bases.',
+        scope: 'Sun, Earth, Moon, Nodes, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto. Pas encore de bodygraph complet, centres, canaux, type, autorite ni croix d incarnation.'
       }
     },
     precision: {
@@ -352,7 +352,7 @@ export function createModelMeta() {
       'Lecture dérivée: signe, maison, aspect ou phase construits à partir des mesures brutes.',
       'Lecture tropicale: zodiaque saisonnier de 12 signes égaux, distinct des constellations astronomiques.',
       'Lecture sidérale: même base géométrique, mais décalée par ayanamsa; elle n est pas identique aux frontières IAU.',
-      'Human Design: non implémenté comme système autonome; les correspondances symboliques affichées ne suffisent pas à produire un bodygraph.',
+      'Human Design: activations conscientes/inconscientes et sous-structures calculées, mais pas encore de bodygraph complet ni de logique centres/canaux/type.',
       'Traduction humaine: reformulation astrologique destinée à être compréhensible, sans prétention de mesure.'
     ]
   };
@@ -372,6 +372,7 @@ export function createEmptyChart() {
     houseSystem: null,
     aspects: [],
     symbolic: {},
+    humanDesign: null,
     diagnostics: {},
     synthesis: null
   };

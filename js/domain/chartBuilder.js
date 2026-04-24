@@ -16,6 +16,7 @@ import { computeSun } from '../astronomy/sun.js';
 import { computeMoon } from '../astronomy/moon.js';
 import { computeNextMoonConstellationTransition } from '../astronomy/moonConstellationTransitions.js';
 import { computePlanets } from '../astronomy/planets.js';
+import { computeHumanDesignData } from '../astronomy/humanDesign.js';
 import { meanLunarNode, trueLunarNode } from '../astronomy/nodes.js';
 import { evaluateEclipsePotential } from '../astronomy/eclipses.js';
 import { buildMoonPhaseDataFromBodiesAtJd } from '../astronomy/moonPhases.js';
@@ -100,6 +101,10 @@ export function buildChart(input, options = {}) {
     chart.symbolic[key] = buildSymbolicBodyData(planet);
   }
 
+  chart.humanDesign = computeHumanDesignData(chart, {
+    precisionMode: chart.options.planetPrecisionMode
+  });
+
   chart.diagnostics.eclipse = evaluateEclipsePotential(sun.longitudeDeg, moon.longitudeDeg, trueNode);
   chart.diagnostics.moonConstellationTransition = computeNextMoonConstellationTransition(
     input,
@@ -148,6 +153,11 @@ export function buildChart(input, options = {}) {
     chart.meta.precision.coreAstronomy.level = 'élevée pragmatique renforcée';
     chart.meta.precision.coreAstronomy.summary = 'Le moteur combine le calcul local Soleil/Lune/planètes avec une correction interpolée sur ancrages officiels JPL Horizons pour améliorer les coordonnées planétaires géocentriques.';
     chart.meta.precision.coreAstronomy.evidence = 'Validation locale sur fixtures USNO pour Soleil/Lune et ancrages officiels JPL Horizons versionnés pour les planètes.';
+  }
+
+  if (chart.humanDesign) {
+    chart.meta.frameworks.humanDesign.summary = 'Le projet calcule maintenant les activations Human Design de base a partir de longitudes Swiss Ephemeris: date de design, planetes conscientes/inconscientes et decomposition porte/ligne/couleur/ton/base.';
+    chart.meta.frameworks.humanDesign.scope = 'Sun, Earth, Moon, Nodes, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto; pas encore de bodygraph complet, centres, canaux, type, autorite ni croix d incarnation.';
   }
 
   return chart;

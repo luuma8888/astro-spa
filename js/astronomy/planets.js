@@ -98,6 +98,14 @@ function rectToSpherical(x, y, z) {
   return { lon, lat, radius };
 }
 
+function vectorMagnitude(vector) {
+  return Math.sqrt(
+    vector.xAu * vector.xAu
+    + vector.yAu * vector.yAu
+    + vector.zAu * vector.zAu
+  );
+}
+
 function computeHeliocentricPlanet(name, T) {
   const base = selectPlanetModel(name, T);
   const elements = getElementsAtTime(base, T);
@@ -234,6 +242,7 @@ function getPrecisionAnchorCache() {
       if (!actual) continue;
 
       planetAnchors.push({
+        id: anchor.id,
         T,
         delta: {
           xAu: reference.xAu - actual.xAu,
@@ -260,27 +269,60 @@ function interpolatePrecisionDelta(planetName, T) {
   if (!anchors || anchors.length === 0) return null;
 
   if (T < anchors[0].T || T > anchors[anchors.length - 1].T) {
-    return null;
+    return {
+      applied: false,
+      strategy: 'out-of-range',
+      anchors: [],
+      interpolationRatio: null,
+      delta: null
+    };
   }
 
   for (let index = 0; index < anchors.length; index += 1) {
     const current = anchors[index];
     if (Math.abs(T - current.T) < 1e-12) {
-      return current.delta;
+      return {
+        applied: true,
+        strategy: 'exact-anchor',
+        anchors: [current.id],
+        interpolationRatio: 0,
+        delta: current.delta
+      };
     }
 
     const next = anchors[index + 1];
     if (!next || T > next.T) continue;
+    if (Math.abs(T - next.T) < 1e-12) {
+      return {
+        applied: true,
+        strategy: 'exact-anchor',
+        anchors: [next.id],
+        interpolationRatio: 0,
+        delta: next.delta
+      };
+    }
 
     const ratio = (T - current.T) / (next.T - current.T);
     return {
-      xAu: current.delta.xAu + (next.delta.xAu - current.delta.xAu) * ratio,
-      yAu: current.delta.yAu + (next.delta.yAu - current.delta.yAu) * ratio,
-      zAu: current.delta.zAu + (next.delta.zAu - current.delta.zAu) * ratio
+      applied: true,
+      strategy: 'interpolated',
+      anchors: [current.id, next.id],
+      interpolationRatio: ratio,
+      delta: {
+        xAu: current.delta.xAu + (next.delta.xAu - current.delta.xAu) * ratio,
+        yAu: current.delta.yAu + (next.delta.yAu - current.delta.yAu) * ratio,
+        zAu: current.delta.zAu + (next.delta.zAu - current.delta.zAu) * ratio
+      }
     };
   }
 
-  return null;
+  return {
+    applied: false,
+    strategy: 'unresolved',
+    anchors: [],
+    interpolationRatio: null,
+    delta: null
+  };
 }
 
 function applyPrecisionDelta(planet, delta, epsilonDeg) {
@@ -312,19 +354,47 @@ export function computePlanets(T, epsilonDeg, options = {}) {
   const basePlanets = computePlanetsBase(T, epsilonDeg);
 
   if (precisionMode !== 'enhanced') {
+    for (const planet of Object.values(basePlanets)) {
+      planet.precisionCorrection = {
+        mode: precisionMode,
+        applied: false,
+        strategy: 'standard-model',
+        anchors: [],
+        interpolationRatio: null,
+        deltaAu: null
+      };
+    }
     return basePlanets;
   }
 
   const corrected = {};
 
   for (const [name, planet] of Object.entries(basePlanets)) {
-    const delta = interpolatePrecisionDelta(name, T);
-    corrected[name] = delta
+    const correction = interpolatePrecisionDelta(name, T);
+    const correctionDelta = correction?.delta ?? null;
+    const correctedPlanet = correction?.applied && correctionDelta
       ? {
-        ...applyPrecisionDelta(planet, delta, epsilonDeg),
+        ...applyPrecisionDelta(planet, correctionDelta, epsilonDeg),
         modelRange: `${planet.modelRange}+horizons-anchor-correction`
       }
       : planet;
+
+    corrected[name] = {
+      ...correctedPlanet,
+      precisionCorrection: {
+        mode: precisionMode,
+        applied: Boolean(correction?.applied && correctionDelta),
+        strategy: correction?.strategy ?? 'unresolved',
+        anchors: correction?.anchors ?? [],
+        interpolationRatio: correction?.interpolationRatio ?? null,
+        deltaAu: correctionDelta
+          ? {
+            ...correctionDelta,
+            magnitudeAu: vectorMagnitude(correctionDelta)
+          }
+          : null
+      }
+    };
   }
 
   return corrected;

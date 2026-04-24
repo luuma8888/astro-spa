@@ -10,9 +10,6 @@ export function renderHouses(chart) {
     }));
 
   el.innerHTML = `
-    <div class="section-block section-block-intro">
-      <p>Chaque cuspide est la longitude d’ouverture d’une maison dans le système ${chart.houseSystem}.</p>
-    </div>
     <div class="house-grid">
       ${houseRows
       .map((item) => `

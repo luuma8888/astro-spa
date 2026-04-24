@@ -1,70 +1,54 @@
-import { formatConstellationLabel, formatDeg, formatIsoUtc, formatIsoUtcRaw, formatIsoWithOffset, formatIsoWithOffsetRaw } from './formatters.js';
+import { formatDeg } from './formatters.js';
 
-function renderMoonConstellationTransition(chart, label, body) {
-  if (label !== 'Lune') return '';
-
-  const transition = chart.diagnostics?.moonConstellationTransition;
-  if (!transition?.to?.name) {
-    return '<p>Prochaine constellation lunaire : indisponible</p>';
-  }
-
-  const toLabel = formatConstellationLabel(transition.to);
-
+function renderBodyRow(label, body) {
   return `
-    <p>Prochaine constellation lunaire : <span title="${toLabel.title}">${toLabel.short}</span></p>
-    <p>Passage estimé : <span title="${formatIsoWithOffsetRaw(transition.utcIso, chart.input?.utcOffset ?? 0)}">${formatIsoWithOffset(transition.utcIso, chart.input?.utcOffset ?? 0)}</span></p>
-    <p>Référence UTC : <span title="${formatIsoUtcRaw(transition.utcIso)}">${formatIsoUtc(transition.utcIso)}</span></p>
+    <tr>
+      <th scope="row" class="astro-body-name">${label}</th>
+      <td>${body.presentation?.longitudeText ?? formatDeg(body.longitudeDeg)}</td>
+      <td>${body.presentation?.latitudeText ?? formatDeg(body.latitudeDeg)}</td>
+      <td>${body.presentation?.tropicalSignText ?? body.tropical?.name ?? 'n/a'}</td>
+      <td>${body.presentation?.siderealSignText ?? body.sidereal?.name ?? 'n/a'}</td>
+      <td>${body.presentation?.houseText ?? body.house ?? 'n/a'}</td>
+      <td title="${body.presentation?.constellationTitleText ?? body.constellation?.name ?? 'n/a'}">${body.presentation?.constellationText ?? body.constellation?.name ?? 'n/a'}</td>
+    </tr>
   `;
 }
 
 export function renderBodies(chart) {
   const el = document.getElementById('bodies');
-
-  const intro = '<div class="section-block section-block-intro"><p>Longitude et latitude donnent la position céleste calculée. Signes, maisons et constellation sont des lectures dérivées de cette position.</p></div>';
-  const keyBodies = [
+  const bodies = [
     ['Soleil', chart.bodies.sun],
     ['Lune', chart.bodies.moon],
     ['Mercure', chart.planets?.Mercury],
     ['Vénus', chart.planets?.Venus],
-    ['Mars', chart.planets?.Mars]
+    ['Mars', chart.planets?.Mars],
+    ['Jupiter', chart.planets?.Jupiter],
+    ['Saturne', chart.planets?.Saturn],
+    ['Uranus', chart.planets?.Uranus],
+    ['Neptune', chart.planets?.Neptune]
   ].filter(([, body]) => body);
 
-  const quickScan = `
-    <div class="compact-list">
-      ${keyBodies.map(([label, body]) => `
-        <article class="compact-item">
-          <span class="compact-item-label">${label}</span>
-          <strong class="compact-item-lead">${body.presentation?.tropicalSignText ?? body.tropical?.name ?? 'n/a'} • maison ${body.presentation?.houseText ?? body.house ?? 'n/a'}</strong>
-          <span class="compact-item-meta" title="${body.presentation?.constellationTitleText ?? body.constellation?.name ?? 'n/a'}">Constellation ${body.presentation?.constellationText ?? body.constellation?.name ?? 'n/a'}</span>
-        </article>
-      `).join('')}
+  el.innerHTML = `
+    <div class="section-block section-block-intro">
+      <p>Un seul tableau réunit ici les positions des corps. Les signes tropicaux et sidéraux sont alignés sur la même ligne, les maisons ne sont montrées qu’ici, et le détail technique complet des cuspides est relégué plus bas dans la section technique.</p>
+    </div>
+    <div class="astro-table-wrap">
+      <table class="astro-table">
+        <thead>
+          <tr>
+            <th>Corps</th>
+            <th>Longitude</th>
+            <th>Latitude</th>
+            <th>Tropical</th>
+            <th>Sidéral</th>
+            <th>Maison</th>
+            <th>Constellation</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${bodies.map(([label, body]) => renderBodyRow(label, body)).join('')}
+        </tbody>
+      </table>
     </div>
   `;
-
-  const html = [
-    ['Soleil', chart.bodies.sun],
-    ['Lune', chart.bodies.moon],
-    ...Object.entries(chart.planets)
-  ].map(([key, body], index) => `
-    <details class="compact-disclosure" data-persist-key="body:${key}"${index < 2 ? ' open' : ''}>
-      <summary>
-        <span class="compact-disclosure-title">${key}</span>
-        <span class="compact-disclosure-meta">${body.presentation?.tropicalSignText ?? body.tropical?.name ?? 'n/a'} • maison ${body.presentation?.houseText ?? body.house ?? 'n/a'}</span>
-      </summary>
-      <article class="body-card">
-        <div class="body-meta-grid">
-          <div><span class="body-label">Longitude</span><strong>${body.presentation?.longitudeText ?? formatDeg(body.longitudeDeg)}</strong></div>
-          <div><span class="body-label">Latitude</span><strong>${body.presentation?.latitudeText ?? formatDeg(body.latitudeDeg)}</strong></div>
-          <div><span class="body-label">Signe tropical</span><strong>${body.presentation?.tropicalSignText ?? body.tropical.name}</strong></div>
-          <div><span class="body-label">Signe sidéral</span><strong>${body.presentation?.siderealSignText ?? body.sidereal.name}</strong></div>
-          <div><span class="body-label">Maison</span><strong>${body.presentation?.houseText ?? body.house}</strong></div>
-          <div><span class="body-label">Constellation</span><strong title="${body.presentation?.constellationTitleText ?? body.constellation?.name ?? 'n/a'}">${body.presentation?.constellationText ?? (body.constellation ? body.constellation.name : 'n/a')}</strong></div>
-        </div>
-        <p class="body-source"><strong>Source constellation :</strong> ${body.presentation?.constellationSourceText ?? body.constellation?.source ?? 'n/a'}</p>
-        ${renderMoonConstellationTransition(chart, key, body)}
-      </article>
-    </details>
-  `).join('');
-
-  el.innerHTML = intro + quickScan + html;
 }

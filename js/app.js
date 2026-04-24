@@ -25,44 +25,12 @@ const MAIN_FORM_DRAFT_KEY = 'astro-app-main-form-draft';
 const TRANSIT_FORM_DRAFT_KEY = 'astro-app-transit-form-draft';
 const STORAGE_TEST_KEY = 'astro-app-storage-test';
 const DEFAULT_SETTINGS = {
-  houseSystem: 'porphyry',
-  ayanamsa: 'lahiri',
   synthesisLevel: 'medium',
   disclosureState: {}
 };
-const PROFILE_PRESETS = {
-  western: {
-    houseSystem: 'porphyry',
-    ayanamsa: 'lahiri',
-    description: 'Pour un thème astral occidental classique: lecture surtout tropicale, maisons actives, ayanamsa peu central.'
-  },
-  vedic: {
-    houseSystem: 'whole-sign',
-    ayanamsa: 'lahiri',
-    description: 'Pour une lecture védique / sidérale: Whole Sign + Lahiri est le point de départ le plus naturel dans cette app.'
-  },
-  'human-design': {
-    houseSystem: 'equal',
-    ayanamsa: 'lahiri',
-    description: 'Utile si tu veux surtout récupérer des positions et cycles. Ce n’est pas un bodygraph complet, mais les repères célestes sont plus faciles à lire.'
-  },
-  astronomy: {
-    houseSystem: 'equal',
-    ayanamsa: 'lahiri',
-    description: 'Si tu veux avant tout des données astronomiques: les maisons et l’ayanamsa deviennent secondaires, l’important est date, heure, lieu et UTC.'
-  }
-};
-
-const HOUSE_SYSTEM_HELP = {
-  porphyry: 'Bon compromis pour une lecture de thème occidental: découpe dynamique à partir des angles.',
-  equal: 'Chaque maison couvre 30°. Plus simple à lire et utile pour une vue repère ou comparative.',
-  'whole-sign': 'Chaque signe devient une maison entière. Souvent privilégié dans les lectures sidérales / védiques.'
-};
-
-const AYANAMSA_HELP = {
-  lahiri: 'Référence la plus courante pour une lecture sidérale védique.',
-  faganBradley: 'Option sidérale occidentale classique si tu veux comparer une autre tradition.',
-  krishnamurti: 'Variante utilisée dans certaines écoles KP / védique spécialisées.'
+const DEFAULT_CHART_OPTIONS = {
+  houseSystem: 'porphyry',
+  ayanamsa: 'lahiri'
 };
 
 const CITY_PRESETS = {
@@ -168,10 +136,7 @@ function getMainFormInput(form) {
       timeZone: getTimeZoneValue(form),
       utcOffset: getUtcOffsetValue(form)
     },
-    options: {
-      houseSystem: formData.get('houseSystem') || 'porphyry',
-      ayanamsa: formData.get('ayanamsa') || 'lahiri'
-    }
+    options: { ...DEFAULT_CHART_OPTIONS }
   };
 }
 
@@ -277,16 +242,16 @@ function updateHero(chart = uiState.currentChart, transitResult = uiState.curren
   if (!chart?.input) {
     setText('hero-chart-title', 'Aucune carte calculée');
     setText('hero-chart-meta', 'Calcule ou charge une carte pour afficher le contexte principal, le lieu, les réglages et les points saillants.');
-    setText('hero-reading-note', 'Le shell privilégie la consultation progressive: vue rapide, lecture interprétative, puis détails techniques.');
-    setText('hero-primary-reading', 'Tropicale + dashboard');
-    setText('hero-primary-reading-sub', 'Maisons, synthèse progressive et repères sidéraux comparatifs.');
+    setText('hero-reading-note', 'Le shell privilégie la consultation progressive: vue d’ensemble, astronomie, lune, Design Humain, puis détail technique.');
+    setText('hero-primary-reading', 'Occidental • Sidéral • Astronomie • HD');
+    setText('hero-primary-reading-sub', 'Une seule saisie, puis plusieurs lectures organisées sans reconfigurer le formulaire.');
     setText('hero-precision', 'Mesure pragmatique élevée');
     setText('hero-precision-sub', 'Le moteur local distingue mesure astronomique, lecture zodiacale et symbolique.');
     setText('hero-lunar-focus', 'Phase non disponible');
     setText('hero-lunar-focus-sub', 'La zone lunaire regroupe phase, visibilité, diagnostics et prochains événements.');
     setText('hero-transit-focus', 'Aucun transit');
     setText('hero-transit-focus-sub', 'Lance une comparaison pour afficher densité, intensité et lecture rapide des transits.');
-    setText('hero-method-note', 'Astronomie, tropical, sidéral, symbolique');
+    setText('hero-method-note', 'Naissance, lieu, fuseau → plusieurs lectures organisées');
     return;
   }
 
@@ -308,10 +273,10 @@ function updateHero(chart = uiState.currentChart, transitResult = uiState.curren
   );
   setText(
     'hero-reading-note',
-    `Lecture principale en ${chart.houseSystem}, ayanamsa ${chart.options?.ayanamsa ?? 'lahiri'}. La constellation astronomique reste affichée comme repère distinct du signe.`
+    'Une seule saisie alimente les lectures occidentale, sidérale, lunaire, astronomique et Design Humain. Les réglages techniques sont relégués au second plan.'
   );
   setText('hero-primary-reading', `${sunSign} / ${moonSign}`);
-  setText('hero-primary-reading-sub', `Dominante tropicale, comparaison sidérale disponible, ${ascSign} pour le Soleil.`);
+  setText('hero-primary-reading-sub', `Lecture tropicale principale, sidéral comparatif, constellation astronomique distincte, ${ascSign} pour le Soleil.`);
   setText('hero-precision', precisionLevel);
   setText('hero-precision-sub', precisionEvidence);
   setText('hero-lunar-focus', moonPhase);
@@ -327,7 +292,7 @@ function updateHero(chart = uiState.currentChart, transitResult = uiState.curren
 
   setText(
     'hero-method-note',
-    `Astronomie mesurée, lecture tropicale principale, sidéral comparatif, symbolique séparée du moteur principal.`
+    'Entrée minimale: naissance, lieu, fuseau. Les paramètres techniques restent disponibles mais n’encombrent plus le flux principal.'
   );
 }
 
@@ -351,14 +316,31 @@ function populateForm(form, input) {
   form.elements.time.value = input.time ?? '';
   form.elements.latitude.value = input.latitude ?? '';
   form.elements.longitude.value = input.longitude ?? '';
+  if (form.elements.cityPreset) {
+    form.elements.cityPreset.value = findCityPresetKey(input);
+  }
   setTimeZoneValue(form, input.timeZone ?? guessTimeZoneFromOffset(input.utcOffset ?? 0));
   syncUtcOffsetFromTimeZone(form);
+  updatePlaceHelp(form);
 }
 
-function setProjectOptions(form, options) {
-  if (!form || !options) return;
-  if (form.elements.houseSystem) form.elements.houseSystem.value = options.houseSystem ?? 'porphyry';
-  if (form.elements.ayanamsa) form.elements.ayanamsa.value = options.ayanamsa ?? 'lahiri';
+function updatePlaceHelp(form) {
+  const help = document.getElementById('chart-place-help');
+  if (!help || !form) return;
+
+  const cityKey = form.elements.cityPreset?.value;
+  const city = cityKey ? CITY_PRESETS[cityKey] : null;
+
+  if (city) {
+    help.textContent = `${city.label} remplit automatiquement latitude ${city.latitude.toFixed(4)}, longitude ${city.longitude.toFixed(4)} et le fuseau conseillé ${city.timeZone}.`;
+    return;
+  }
+
+  const latitude = Number(form.elements.latitude?.value);
+  const longitude = Number(form.elements.longitude?.value);
+  help.textContent = Number.isFinite(latitude) && Number.isFinite(longitude)
+    ? `Coordonnées manuelles actives: latitude ${latitude.toFixed(4)}, longitude ${longitude.toFixed(4)}.`
+    : 'Choisis une ville. Si elle n’est pas dans la liste, ouvre la saisie avancée pour entrer les coordonnées.';
 }
 
 function populateUtcOffsetSelect(select) {
@@ -532,37 +514,6 @@ function syncUtcOffsetFromTimeZone(form, prefix = 'chart') {
   }
 }
 
-function updateFormSelectHelp(form, prefix) {
-  if (!form) return;
-  const houseValue = form.elements.houseSystem?.value;
-  const ayanamsaValue = form.elements.ayanamsa?.value;
-  const houseHelp = document.getElementById(`${prefix}-house-help`);
-  const ayanamsaHelp = document.getElementById(`${prefix}-ayanamsa-help`);
-
-  if (houseHelp) {
-    houseHelp.textContent = HOUSE_SYSTEM_HELP[houseValue] ?? '';
-  }
-
-  if (ayanamsaHelp) {
-    ayanamsaHelp.textContent = AYANAMSA_HELP[ayanamsaValue] ?? '';
-  }
-}
-
-function applyProfilePreset(form, presetKey) {
-  const preset = PROFILE_PRESETS[presetKey];
-  if (!form || !preset) return;
-
-  if (form.elements.houseSystem) form.elements.houseSystem.value = preset.houseSystem;
-  if (form.elements.ayanamsa) form.elements.ayanamsa.value = preset.ayanamsa;
-  updateFormSelectHelp(form, 'chart');
-}
-
-function updateProfileHelp(presetKey) {
-  const el = document.getElementById('chart-profile-help');
-  if (!el) return;
-  el.textContent = PROFILE_PRESETS[presetKey]?.description ?? '';
-}
-
 function applyCityPreset(form, presetKey) {
   const preset = CITY_PRESETS[presetKey];
   if (!form || !preset) return false;
@@ -571,6 +522,7 @@ function applyCityPreset(form, presetKey) {
   if (form.elements.longitude) form.elements.longitude.value = preset.longitude;
   setTimeZoneValue(form, preset.timeZone ?? guessTimeZoneFromOffset(preset.utcOffset));
   syncUtcOffsetFromTimeZone(form, form.id === 'transit-form' ? 'transit' : 'chart');
+  updatePlaceHelp(form);
   return true;
 }
 
@@ -585,6 +537,15 @@ function bindCityPreset(form, statusMessage) {
     const city = CITY_PRESETS[select.value];
     setStatus(`${statusMessage}: ${city.label}. Vérifie l’UTC selon l’heure d’été / hiver.`);
   });
+}
+
+function findCityPresetKey(input) {
+  if (!input) return '';
+  return Object.entries(CITY_PRESETS).find(([, preset]) =>
+    Math.abs(preset.latitude - Number(input.latitude)) < 1e-6
+    && Math.abs(preset.longitude - Number(input.longitude)) < 1e-6
+    && (input.timeZone ? preset.timeZone === input.timeZone : true)
+  )?.[0] ?? '';
 }
 
 function setSynthesisLevelControl(select, value) {
@@ -616,9 +577,22 @@ function chartNeedsRebuild(chart) {
   if ((chart?.aspects ?? []).some((aspect) => !aspect?.presentation)) return true;
   if (!chart?.bodies?.sun?.presentation?.constellationTitleText) return true;
   if (!chart?.bodies?.moon?.presentation?.constellationTitleText) return true;
+  if (!chart?.symbolic || Object.keys(chart.symbolic).length < 4) return true;
+  if (!chart?.humanDesign?.personality || !chart?.humanDesign?.design) return true;
+  if (!chart?.humanDesign?.profile) return true;
+  if (!Number.isFinite(chart?.humanDesign?.designAgeDays)) return true;
   if (!chart?.meta?.precision?.coreAstronomy) return true;
   if (!Array.isArray(chart?.meta?.interpretationPolicy)) return true;
   return false;
+}
+
+function safeRender(step, renderFn) {
+  try {
+    renderFn();
+  } catch (error) {
+    console.error(`Render failure in ${step}`, error);
+    setStatus(`Erreur d’affichage dans ${step}.`);
+  }
 }
 
 function normalizeChartForUi(chart, inputFallback = null, optionsFallback = null) {
@@ -719,19 +693,19 @@ function bindDraftPersistence(form, key, persistFn) {
 }
 
 function renderChart(chart) {
-  renderQuickScan(chart, uiState.currentTransitResult, uiState.synthesisLevel);
-  renderSummary(chart);
-  renderClarifications(chart);
-  renderCalculationGroups(chart);
-  renderBodies(chart);
-  renderHouses(chart);
-  renderSymbolic(chart);
-  renderAspects(chart);
-  renderMoonPhase(chart);
-  renderMoonDiagnostics(chart);
-  renderRiseSet(chart);
-  renderChartWheel(chart);
-  renderSynthesis(chart, uiState.synthesisLevel);
+  safeRender('lecture rapide', () => renderQuickScan(chart, uiState.currentTransitResult, uiState.synthesisLevel));
+  safeRender('résumé', () => renderSummary(chart));
+  safeRender('clés de lecture', () => renderClarifications(chart));
+  safeRender('familles de calcul', () => renderCalculationGroups(chart));
+  safeRender('corps célestes', () => renderBodies(chart));
+  safeRender('maisons', () => renderHouses(chart));
+  safeRender('design humain', () => renderSymbolic(chart));
+  safeRender('aspects', () => renderAspects(chart));
+  safeRender('phase lunaire', () => renderMoonPhase(chart));
+  safeRender('diagnostic lunaire', () => renderMoonDiagnostics(chart));
+  safeRender('lever / coucher', () => renderRiseSet(chart));
+  safeRender('carte du ciel', () => renderChartWheel(chart));
+  safeRender('synthèse', () => renderSynthesis(chart, uiState.synthesisLevel));
   applyDisclosureState(document, uiState.disclosureState);
   bindDisclosurePersistence(document, uiState.canUseStorage);
   updateHero(chart, uiState.currentTransitResult);
@@ -778,9 +752,7 @@ export function initApp() {
   syncUtcOffsetFromTimeZone(transitForm, 'transit');
   uiState.synthesisLevel = normalizeSynthesisLevel(settings.synthesisLevel);
   uiState.disclosureState = settings.disclosureState ?? {};
-  setProjectOptions(form, settings);
-  updateFormSelectHelp(form, 'chart');
-  updateProfileHelp(form?.elements?.profilePreset?.value ?? 'western');
+  updatePlaceHelp(form);
   setSynthesisLevelControl(synthesisLevelSelect, uiState.synthesisLevel);
 
   if (!canUseStorage) {
@@ -800,8 +772,6 @@ export function initApp() {
 
   if (mainDraft?.input) {
     populateForm(form, mainDraft.input);
-    setProjectOptions(form, mainDraft.options ?? settings);
-    updateFormSelectHelp(form, 'chart');
     syncUtcOffsetFromTimeZone(form, 'chart');
     setStatus('Brouillon du formulaire restauré.');
   }
@@ -823,9 +793,8 @@ export function initApp() {
       populateForm(form, uiState.currentInput);
     }
     if (!mainDraft?.options) {
-      setProjectOptions(form, storedChart.natalOptions ?? storedChart.chart.options ?? settings);
+      // The main form no longer exposes technical options directly.
     }
-    updateFormSelectHelp(form, 'chart');
     renderChart(uiState.currentChart);
     renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
     setStatus('Carte restaurée depuis le stockage local.');
@@ -840,9 +809,8 @@ export function initApp() {
       populateForm(form, storedChart.input);
     }
     if (!mainDraft?.options) {
-      setProjectOptions(form, storedChart.options ?? settings);
+      // The main form no longer exposes technical options directly.
     }
-    updateFormSelectHelp(form, 'chart');
     renderChart(uiState.currentChart);
     renderTransits(uiState.currentTransitResult, uiState.synthesisLevel);
     setStatus('Carte restaurée depuis l’ancien format local.');
@@ -859,21 +827,11 @@ export function initApp() {
     setStatus(`Niveau de lecture réglé sur ${uiState.synthesisLevel}.`);
   });
 
-  form.elements.profilePreset?.addEventListener('change', () => {
-    const presetKey = form.elements.profilePreset.value || 'western';
-    applyProfilePreset(form, presetKey);
-    updateProfileHelp(presetKey);
-    if (canUseStorage) {
-      persistMainFormDraft(form);
-    }
-    setStatus('Configuration de lecture appliquée au formulaire.');
-  });
-
-  form.elements.houseSystem?.addEventListener('change', () => updateFormSelectHelp(form, 'chart'));
-  form.elements.ayanamsa?.addEventListener('change', () => updateFormSelectHelp(form, 'chart'));
   form.elements.timeZone?.addEventListener('change', () => syncUtcOffsetFromTimeZone(form, 'chart'));
   form.elements.date?.addEventListener('change', () => syncUtcOffsetFromTimeZone(form, 'chart'));
   form.elements.time?.addEventListener('change', () => syncUtcOffsetFromTimeZone(form, 'chart'));
+  form.elements.latitude?.addEventListener('input', () => updatePlaceHelp(form));
+  form.elements.longitude?.addEventListener('input', () => updatePlaceHelp(form));
   transitForm.elements.timeZone?.addEventListener('change', () => syncUtcOffsetFromTimeZone(transitForm, 'transit'));
   transitForm.elements.date?.addEventListener('change', () => syncUtcOffsetFromTimeZone(transitForm, 'transit'));
   transitForm.elements.time?.addEventListener('change', () => syncUtcOffsetFromTimeZone(transitForm, 'transit'));
@@ -969,7 +927,6 @@ export function initApp() {
     uiState.currentInput = input;
     uiState.currentTransitResult = null;
     if (input) populateForm(form, input);
-    setProjectOptions(form, options);
     persistMainFormDraft(form);
     setSynthesisLevelControl(synthesisLevelSelect, uiState.synthesisLevel);
     renderChart(chart);
@@ -1019,7 +976,6 @@ export function initApp() {
         populateForm(form, uiState.currentInput);
       }
 
-      setProjectOptions(form, imported?.natalOptions ?? chart.options ?? settings);
       if (canUseStorage) {
         persistMainFormDraft(form);
       }

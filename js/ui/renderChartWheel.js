@@ -112,6 +112,8 @@ export function renderChartWheel(chart) {
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
   const width = canvas.width;
   const height = canvas.height;
   const cx = width / 2;
